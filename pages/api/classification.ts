@@ -39,7 +39,7 @@ export default async function handler(
       SELECT 
         cs.status,
         cs.count,
-        ROUND((cs.count::float / t.total_count) * 100, 1) as percentage
+        (cs.count::float / t.total_count) * 100 as percentage
       FROM classification_status cs
       CROSS JOIN total t
       ORDER BY
@@ -53,7 +53,11 @@ export default async function handler(
     `;
     
     const statusDistributionResult = await pool.query(statusDistributionQuery);
-    const statusDistribution = statusDistributionResult.rows;
+    // Format the percentage to 1 decimal place in JavaScript instead of SQL
+    const statusDistribution = statusDistributionResult.rows.map(row => ({
+      ...row,
+      percentage: parseFloat((row.percentage).toFixed(1))
+    }));
     
     // Get T-group consistency data
     const tgroupConsistencyQuery = `
@@ -81,14 +85,18 @@ export default async function handler(
       )
       SELECT
         name,
-        ROUND(avg_consistency * 100, 1) as value
+        avg_consistency * 100 as value
       FROM tgroup_names_data
       ORDER BY avg_consistency DESC
       LIMIT 10
     `;
     
     const tgroupConsistencyResult = await pool.query(tgroupConsistencyQuery);
-    const tgroupConsistency = tgroupConsistencyResult.rows;
+    // Format the value to 1 decimal place in JavaScript
+    const tgroupConsistency = tgroupConsistencyResult.rows.map(row => ({
+      ...row,
+      value: parseFloat((row.value).toFixed(1))
+    }));
     
     // Get classification comparison data across cluster sets
     const comparisonDataQuery = `

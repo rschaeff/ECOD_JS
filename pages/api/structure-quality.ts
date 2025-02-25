@@ -18,6 +18,7 @@ export default async function handler(
 
   try {
     // Get quality metrics data by joining domain_structure with other tables
+    // Fixed: Added cluster_set_id to GROUP BY clause
     const qualityMetricsQuery = `
       WITH cluster_data AS (
         SELECT 
@@ -71,7 +72,7 @@ export default async function handler(
         cd.structure_consistency,
         cd.experimental_support_ratio,
         th.tgroup_homogeneity,
-        ROUND(AVG(sm.avg_plddt)::numeric, 2) as plddt,
+        AVG(sm.avg_plddt) as plddt,
         cd.cluster_set,
         sm.source
       FROM cluster_data cd
@@ -79,13 +80,24 @@ export default async function handler(
       LEFT JOIN swissprot.domain_cluster_members dcm ON cd.cluster_id = dcm.cluster_id
       LEFT JOIN structure_metrics sm ON dcm.domain_id = sm.domain_id
       WHERE cd.structure_consistency IS NOT NULL
-      GROUP BY cd.cluster_size, cd.structure_consistency, cd.experimental_support_ratio, th.tgroup_homogeneity, cd.cluster_set, sm.source
+      GROUP BY 
+        cd.cluster_size, 
+        cd.structure_consistency, 
+        cd.experimental_support_ratio, 
+        th.tgroup_homogeneity, 
+        cd.cluster_set,
+        sm.source,
+        cd.cluster_set_id
       ORDER BY cd.cluster_set_id
       LIMIT 1000
     `;
     
     const qualityMetricsResult = await pool.query(qualityMetricsQuery);
-    const qualityMetrics = qualityMetricsResult.rows;
+    // Format the plddt to 2 decimal places in JavaScript
+    const qualityMetrics = qualityMetricsResult.rows.map(row => ({
+      ...row,
+      plddt: parseFloat((row.plddt || 0).toFixed(2))
+    }));
     
     // Get average metrics by cluster set
     const clusterSetAveragesQuery = `
@@ -129,10 +141,10 @@ export default async function handler(
       )
       SELECT
         cm.name,
-        ROUND(cm.avg_structure_consistency::numeric, 2) as avg_structure_consistency,
-        ROUND(cm.avg_experimental_support::numeric, 2) as avg_experimental_support,
-        ROUND(dp.avg_plddt::numeric, 2) as avg_plddt,
-        ROUND(th.avg_tgroup_homogeneity::numeric, 2) as avg_tgroup_homogeneity
+        cm.avg_structure_consistency,
+        cm.avg_experimental_support,
+        dp.avg_plddt,
+        th.avg_tgroup_homogeneity
       FROM cluster_metrics cm
       LEFT JOIN domain_plddt dp ON cm.cluster_set_id = dp.cluster_set_id
       LEFT JOIN tgroup_homogeneity th ON cm.cluster_set_id = th.cluster_set_id
@@ -140,7 +152,14 @@ export default async function handler(
     `;
     
     const clusterSetAveragesResult = await pool.query(clusterSetAveragesQuery);
-    const clusterSetAverages = clusterSetAveragesResult.rows;
+    // Format the values to 2 decimal places in JavaScript
+    const clusterSetAverages = clusterSetAveragesResult.rows.map(row => ({
+      name: row.name,
+      avg_structure_consistency: parseFloat((row.avg_structure_consistency || 0).toFixed(2)),
+      avg_experimental_support: parseFloat((row.avg_experimental_support || 0).toFixed(2)),
+      avg_plddt: parseFloat((row.avg_plddt || 0).toFixed(2)),
+      avg_tgroup_homogeneity: parseFloat((row.avg_tgroup_homogeneity || 0).toFixed(2))
+    }));
     
     return res.status(200).json({
       qualityMetrics,
