@@ -515,7 +515,7 @@ const apiService = {
     }>;
   }> {
     try {
-      const response = await axios.get(`${API_URL}/structure-quality`);
+      const response = await axios.get(`${BAS_API_URL}/structure-quality`);
       return response.data;
     } catch (error) {
       console.error('Error fetching structure quality data:', error);
@@ -554,7 +554,7 @@ const apiService = {
     };
   }> {
     try {
-      const response = await axios.get(`${API_URL}/reclassification-stats`);
+      const response = await axios.get(`${BASE_API_URL}/reclassification-stats`);
       return response.data;
     } catch (error) {
       console.error('Error fetching reclassification statistics:', error);
