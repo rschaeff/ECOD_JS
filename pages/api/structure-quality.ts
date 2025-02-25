@@ -93,10 +93,11 @@ export default async function handler(
     `;
     
     const qualityMetricsResult = await pool.query(qualityMetricsQuery);
-    // Format the plddt to 2 decimal places in JavaScript
+    // Safely format numeric values
     const qualityMetrics = qualityMetricsResult.rows.map(row => ({
       ...row,
-      plddt: parseFloat((row.plddt || 0).toFixed(2))
+      // Make sure to parse values to numbers first before formatting
+      plddt: row.plddt ? Number(parseFloat(row.plddt).toFixed(2)) : null
     }));
     
     // Get average metrics by cluster set
@@ -152,14 +153,24 @@ export default async function handler(
     `;
     
     const clusterSetAveragesResult = await pool.query(clusterSetAveragesQuery);
-    // Format the values to 2 decimal places in JavaScript
-    const clusterSetAverages = clusterSetAveragesResult.rows.map(row => ({
-      name: row.name,
-      avg_structure_consistency: parseFloat((row.avg_structure_consistency || 0).toFixed(2)),
-      avg_experimental_support: parseFloat((row.avg_experimental_support || 0).toFixed(2)),
-      avg_plddt: parseFloat((row.avg_plddt || 0).toFixed(2)),
-      avg_tgroup_homogeneity: parseFloat((row.avg_tgroup_homogeneity || 0).toFixed(2))
-    }));
+    
+    // Format the values using a more robust approach
+    const clusterSetAverages = clusterSetAveragesResult.rows.map(row => {
+      // Helper function to safely format numeric values
+      const formatNumber = (value) => {
+        // Convert to number first, then format
+        const num = parseFloat(value);
+        return !isNaN(num) ? Number(num.toFixed(2)) : null;
+      };
+      
+      return {
+        name: row.name,
+        avg_structure_consistency: formatNumber(row.avg_structure_consistency),
+        avg_experimental_support: formatNumber(row.avg_experimental_support),
+        avg_plddt: formatNumber(row.avg_plddt),
+        avg_tgroup_homogeneity: formatNumber(row.avg_tgroup_homogeneity)
+      };
+    });
     
     return res.status(200).json({
       qualityMetrics,
