@@ -468,4 +468,99 @@ const apiService = {
   }
 };
 
+// Classification data
+async getClassificationData(): Promise<{
+  statusDistribution: Array<{
+    status: string;
+    count: number;
+    percentage: number;
+  }>;
+  tgroupConsistency: Array<{
+    name: string;
+    value: number;
+  }>;
+  comparisonData: Array<{
+    name: string;
+    validated: number;
+    needsReview: number;
+    conflicts: number;
+    unclassified: number;
+  }>;
+}> {
+  try {
+    const response = await axios.get(`${API_URL}/classification`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching classification data:', error);
+    throw error;
+  }
+},
+
+// Structure quality data
+async getStructureQualityData(): Promise<{
+  qualityMetrics: Array<{
+    clusterSize: number;
+    structureConsistency: number;
+    experimentalSupport: number;
+    plddt: number;
+    tgroupHomogeneity: number;
+    clusterSet: string;
+    source: string;
+  }>;
+  clusterSetAverages: Array<{
+    name: string;
+    avgStructureConsistency: number;
+    avgExperimentalSupport: number;
+    avgPlddt: number;
+    avgTgroupHomogeneity: number;
+  }>;
+}> {
+  try {
+    const response = await axios.get(`${API_URL}/structure-quality`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching structure quality data:', error);
+    throw error;
+  }
+},
+
+// Reclassification statistics
+async getReclassificationStats(): Promise<{
+  items: Array<{
+    id: string;
+    name: string;
+    currentTGroup: string;
+    proposedTGroup: string;
+    confidence: string;
+  }>;
+  reasons: Array<{
+    reason: string;
+    count: number;
+    percentage: number;
+  }>;
+  confidenceLevels: Array<{
+    level: string;
+    count: number;
+    percentage: number;
+  }>;
+  priorityTasks: Array<{
+    name: string;
+    count: number;
+    priority: string;
+  }>;
+  reviewStats: {
+    reviewed: number;
+    pending: number;
+    highPriority: number;
+  };
+}> {
+  try {
+    const response = await axios.get(`${API_URL}/reclassification-stats`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching reclassification statistics:', error);
+    throw error;
+  }
+},
+
 export default apiService;

@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Layout from '@/components/Layout';
-import ClusterBreadcrumbs from '@/components/ClusterBreadcrumbs';
+import ClusterBreadCrumbs from '@/components/ClusterBreadCrumbs';
 import apiService from '@/services/api';
 
 const ClustersIndexPage = () => {
@@ -86,7 +86,7 @@ const ClustersIndexPage = () => {
   return (
     <Layout title="All Clusters - Domain Analysis">
       <div className="w-full max-w-6xl mx-auto">
-        <ClusterBreadcrumbs 
+        <ClusterBreadCrumbs 
           items={[
             { label: 'Dashboard', href: '/' },
             { label: 'Clusters' }
