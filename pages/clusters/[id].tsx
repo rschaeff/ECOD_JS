@@ -36,11 +36,12 @@ const ClusterDetailPage: React.FC = () => {
 
       try {
         setLoading(true);
-        const data = await apiService.getClusterDetail(id as string);
+        const data = await apiService.getCluster(Number(id));
         setClusterData(data);
         setLoading(false);
       } catch (err) {
-        setError('Failed to load cluster details');
+        console.error('Error details:', err); // Log the actual error
+        setError('Failed to load cluster details: ' + (err instanceof Error ? err.message : String(err)));
         setLoading(false);
       }
     };
@@ -87,7 +88,7 @@ const ClusterDetailPage: React.FC = () => {
 
     try {
       setLoadingMsa(true);
-      const data = await apiService.getMSAData(id as string);
+      const data = await apiService.getClusterMSA(Number(id));
       setMsaData(data);
     } catch (err) {
       console.error('Failed to load MSA data');
@@ -102,7 +103,7 @@ const ClusterDetailPage: React.FC = () => {
 
     try {
       setLoadingValidation(true);
-      const data = await apiService.getValidationData(id as string);
+      const data = await apiService.getClusterValidation(Number(id));
       setValidationData(data);
     } catch (err) {
       console.error('Failed to load validation data');

@@ -170,7 +170,7 @@ export default async function handler(
       cluster,
       clusterSet,
       members,
-      representative,
+      representative: representative ?? null,
       analysis,
       taxonomyDistribution: {
         ...taxonomyDistribution,
