@@ -5,14 +5,14 @@ import { Database, Grid, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSummaryData } from '@/hooks/useSummaryData';
+import { useDashboardSummaryData } from '@/hooks/useDashboardSummary';
 
 interface SummaryCardsProps {
   className?: string;
 }
 
 const SummaryCards: React.FC<SummaryCardsProps> = ({ className }) => {
-  const { data, loading, error, refresh, isRefreshing } = useSummaryData();
+  const { data, loading, error, refresh, isRefreshing } = useDashboardSummaryData();
 
   // Card configurations for easy maintenance and consistency
   const cardConfigs = [

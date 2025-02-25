@@ -36,7 +36,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { useStructureQualityData } from '@/hooks/useStructureQualityData';
+import { useStructureQualityData } from '@/hooks/useStructureQuality';
 
 interface StructureQualityVisualizationProps {
   className?: string;
