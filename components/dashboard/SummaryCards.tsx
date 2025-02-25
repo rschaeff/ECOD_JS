@@ -12,7 +12,7 @@ interface SummaryCardsProps {
 }
 
 const SummaryCards: React.FC<SummaryCardsProps> = ({ className }) => {
-  const { data, loading, error, refresh, isRefreshing } = useDashboardSummaryData();
+  const { data, loading, error, refresh, isRefreshing } = useDashboardSummary();
 
   // Card configurations for easy maintenance and consistency
   const cardConfigs = [
