@@ -465,7 +465,7 @@ const apiService = {
       console.error('Error searching domains:', error);
       throw error;
     }
-  }
+  },
 
   // Classification data
   async getClassificationData(): Promise<{
