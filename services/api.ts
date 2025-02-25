@@ -487,7 +487,7 @@ const apiService = {
     }>;
   }> {
     try {
-      const response = await axios.get(`${API_URL}/classification`);
+      const response = await axios.get(`${BASE_API_URL}/classification`);
       return response.data;
     } catch (error) {
       console.error('Error fetching classification data:', error);

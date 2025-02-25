@@ -64,7 +64,7 @@ export function useClassificationData(): UseClassificationDataReturn {
       
       // Apply filters to API call if any are set
       const appliedFilters = Object.keys(filters).length > 0 ? filters : undefined;
-      const response = await apiService.getClassificationStatus(appliedFilters);
+      const response = await apiService.getClassificationData(appliedFilters);
       
       setData(response);
       setError(null);
