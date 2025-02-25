@@ -5,7 +5,7 @@ import { Database, Grid, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useDashboardSummaryData } from '@/hooks/useDashboardSummary';
+import { useDashboardSummary } from '@/hooks/useDashboardSummary';
 
 interface SummaryCardsProps {
   className?: string;
