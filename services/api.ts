@@ -1,5 +1,4 @@
-
-// services/api.ts
+// services/api.ts - Updated version with fixed endpoints
 import axios from 'axios';
 
 // Define base API URL from environment or default
@@ -7,7 +6,7 @@ const BASE_API_URL = process.env.NEXT_PUBLIC_BASE_API_URL || '/api';
 
 // Create an axios instance with base configuration
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_BASE_API_URL || '/api',
+  baseURL: BASE_API_URL,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -55,6 +54,18 @@ export interface ClusterSet {
   sequence_identity: number;
   description?: string;
   created_at: string;
+  // Added for more complete representation
+  clusters_count?: number;
+  domains_count?: number;
+  taxonomic_coverage?: number;
+  flagged_clusters?: number;
+  sizeDistribution?: Array<{ range: string; count: number }>;
+  tGroupDistribution?: Array<{ 
+    t_group: string; 
+    name: string; 
+    cluster_count: number; 
+    domain_count: number; 
+  }>;
 }
 
 export interface ClusterMember {
@@ -65,6 +76,8 @@ export interface ClusterMember {
   alignment_coverage: number;
   is_representative: boolean;
   domain?: Domain;
+  // Added to match the API response
+  species?: string;
 }
 
 export interface Domain {
@@ -73,6 +86,7 @@ export interface Domain {
   domain_id: string;
   range: string;
   t_group: string;
+  t_group_name?: string;
 }
 
 export interface ClusterAnalysis {
@@ -189,11 +203,149 @@ export interface ValidationData {
   };
 }
 
+export interface ActivityLogEntry {
+  id: number;
+  entity_type: string;
+  entity_id: string;
+  action: string;
+  user_id: string;
+  details: any;
+  created_at: string;
+}
 
-// Modify the API service to use internal API routes
+export interface ActivityLogResponse {
+  logs: ActivityLogEntry[];
+  total: number;
+  page: number;
+  pageSize: number;
+  summary: {
+    actions: Array<{ action: string; count: number }>;
+    recentUsers: Array<{ 
+      user_id: string; 
+      activity_count: number;
+      last_active: string;
+    }>;
+  };
+}
+
+export interface ClassificationData {
+  statusDistribution: Array<{
+    status: string;
+    count: number;
+    percentage: number;
+  }>;
+  tgroupConsistency: Array<{
+    name: string;
+    value: number;
+  }>;
+  comparisonData: Array<{
+    name: string;
+    validated: number;
+    needs_review: number;
+    conflicts: number;
+    unclassified: number;
+  }>;
+}
+
+export interface StructureQualityData {
+  qualityMetrics: Array<{
+    cluster_size: number;
+    structure_consistency: number;
+    experimental_support_ratio: number;
+    tgroup_homogeneity: number;
+    plddt: number;
+    cluster_set: string;
+    source: string;
+  }>;
+  clusterSetAverages: Array<{
+    name: string;
+    avg_structure_consistency: number;
+    avg_experimental_support: number;
+    avg_plddt: number;
+    avg_tgroup_homogeneity: number;
+  }>;
+}
+
+export interface ReclassificationStats {
+  items: Array<{
+    id: string;
+    name: string;
+    currentTGroup: string;
+    proposedTGroup: string;
+    confidence: string;
+  }>;
+  reasons: Array<{
+    reason: string;
+    count: number;
+    percentage: number;
+  }>;
+  confidenceLevels: Array<{
+    level: string;
+    count: number;
+    percentage: number;
+  }>;
+  priorityTasks: Array<{
+    name: string;
+    count: number;
+    priority: string;
+  }>;
+  reviewStats: {
+    reviewed: number;
+    pending: number;
+    highPriority: number;
+  };
+}
+
+export interface SearchDomainResponse {
+  domains: Array<Domain & {
+    species?: string;
+    phylum?: string;
+    tax_id?: number;
+    has_structure?: boolean;
+    primary_cluster_id?: number;
+  }>;
+  total: number;
+  page: number;
+  pageSize: number;
+  facets: {
+    t_groups: Array<{ t_group: string; name: string; count: number }>;
+    taxonomy: Array<{ superkingdom: string; count: number }>;
+  };
+}
+
+export interface ReclassificationResponse {
+  reclassifications: Array<{
+    id: string;
+    cluster_id: number;
+    cluster_number: number;
+    cluster_set_name: string;
+    current_t_group: string;
+    current_t_group_name: string | null;
+    proposed_t_group: string;
+    proposed_t_group_name: string | null;
+    confidence: string;
+    status: 'pending' | 'approved' | 'rejected';
+    reviewed_by: string | null;
+    reviewed_at: string | null;
+    created_at: string;
+    representative_domain: string;
+    taxonomic_diversity: number | null;
+    structure_consistency: number | null;
+    analysis_notes: string | null;
+  }>;
+  total: number;
+  page: number;
+  pageSize: number;
+  summary: {
+    byConfidence: Array<{ confidence: string; count: number }>;
+    byTGroup: Array<{ t_group: string; name: string; count: number }>;
+  };
+}
+
+// API service functions
 const apiService = {
-  // Dashboard data
-   async getDashboardSummary() {
+  // Dashboard data - split for better performance
+  async getDashboardSummary() {
     try {
       const response = await fetch(`${BASE_API_URL}/dashboard/summary`);
       if (!response.ok) {
@@ -219,7 +371,7 @@ const apiService = {
     }
   },
 
-   async getDashboardTaxonomy() {
+  async getDashboardTaxonomy() {
     try {
       const response = await fetch(`${BASE_API_URL}/dashboard/taxonomy`);
       if (!response.ok) {
@@ -440,12 +592,7 @@ const apiService = {
     tax_id?: number,
     page?: number,
     limit?: number
-  }): Promise<{
-    domains: Domain[],
-    total: number,
-    page: number,
-    pageSize: number
-  }> {
+  }): Promise<SearchDomainResponse> {
     try {
       const queryParams = new URLSearchParams({ query });
       if (params) {
@@ -468,26 +615,9 @@ const apiService = {
   },
 
   // Classification data
-  async getClassificationData(): Promise<{
-    statusDistribution: Array<{
-      status: string;
-      count: number;
-      percentage: number;
-    }>;
-    tgroupConsistency: Array<{
-      name: string;
-      value: number;
-    }>;
-    comparisonData: Array<{
-      name: string;
-      validated: number;
-      needsReview: number;
-      conflicts: number;
-      unclassified: number;
-    }>;
-  }> {
+  async getClassificationData(): Promise<ClassificationData> {
     try {
-      const response = await axios.get(`${BASE_API_URL}/classification`);
+      const response = await api.get(`${BASE_API_URL}/classification`);
       return response.data;
     } catch (error) {
       console.error('Error fetching classification data:', error);
@@ -496,26 +626,9 @@ const apiService = {
   },
 
   // Structure quality data
-  async getStructureQualityData(): Promise<{
-    qualityMetrics: Array<{
-      clusterSize: number;
-      structureConsistency: number;
-      experimentalSupport: number;
-      plddt: number;
-      tgroupHomogeneity: number;
-      clusterSet: string;
-      source: string;
-    }>;
-    clusterSetAverages: Array<{
-      name: string;
-      avgStructureConsistency: number;
-      avgExperimentalSupport: number;
-      avgPlddt: number;
-      avgTgroupHomogeneity: number;
-    }>;
-  }> {
+  async getStructureQualityData(): Promise<StructureQualityData> {
     try {
-      const response = await axios.get(`${BASE_API_URL}/structure-quality`);
+      const response = await api.get(`${BASE_API_URL}/structure-quality`);
       return response.data;
     } catch (error) {
       console.error('Error fetching structure quality data:', error);
@@ -524,42 +637,110 @@ const apiService = {
   },
 
   // Reclassification statistics
-  async getReclassificationStats(): Promise<{
-    items: Array<{
-      id: string;
-      name: string;
-      currentTGroup: string;
-      proposedTGroup: string;
-      confidence: string;
-    }>;
-    reasons: Array<{
-      reason: string;
-      count: number;
-      percentage: number;
-    }>;
-    confidenceLevels: Array<{
-      level: string;
-      count: number;
-      percentage: number;
-    }>;
-    priorityTasks: Array<{
-      name: string;
-      count: number;
-      priority: string;
-    }>;
-    reviewStats: {
-      reviewed: number;
-      pending: number;
-      highPriority: number;
-    };
-  }> {
+  async getReclassificationStats(): Promise<ReclassificationStats> {
     try {
-      const response = await axios.get(`${BASE_API_URL}/reclassification-stats`);
+      const response = await api.get(`${BASE_API_URL}/reclassification-stats`);
       return response.data;
     } catch (error) {
       console.error('Error fetching reclassification statistics:', error);
       throw error;
     }
   },
+
+  // Added: Full activity logs endpoint
+  async getActivityLogs(params?: {
+    entity_type?: string,
+    entity_id?: string,
+    action?: string,
+    user_id?: string,
+    from_date?: string,
+    to_date?: string,
+    page?: number,
+    limit?: number
+  }): Promise<ActivityLogResponse> {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params) {
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined) {
+            queryParams.append(key, value.toString());
+          }
+        });
+      }
+
+      const response = await fetch(`${BASE_API_URL}/activity?${queryParams}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch activity logs');
+      }
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching activity logs:', error);
+      throw error;
+    }
+  },
+
+  // Added: Full reclassifications endpoint
+  async getReclassifications(params?: {
+    status?: 'pending' | 'approved' | 'rejected' | 'all',
+    confidence?: 'high' | 'medium' | 'low',
+    cluster_set_id?: number,
+    page?: number,
+    limit?: number
+  }): Promise<ReclassificationResponse> {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params) {
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined) {
+            queryParams.append(key, value.toString());
+          }
+        });
+      }
+
+      const response = await fetch(`${BASE_API_URL}/reclassifications?${queryParams}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch reclassifications');
+      }
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching reclassifications:', error);
+      throw error;
+    }
+  },
+
+  // Added: Update reclassification status
+  async updateReclassificationStatus(data: {
+    cluster_id: number,
+    status: 'approved' | 'rejected',
+    user_id: string,
+    notes?: string,
+    new_t_group?: string
+  }): Promise<{
+    message: string,
+    cluster_id: number,
+    status: string,
+    user_id: string,
+    timestamp: string
+  }> {
+    try {
+      const response = await api.post(`${BASE_API_URL}/reclassifications`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating reclassification status:', error);
+      throw error;
+    }
+  },
+
+  // Added: Test database connection
+  async testDatabaseConnection(): Promise<any> {
+    try {
+      const response = await api.get(`${BASE_API_URL}/test-connection`);
+      return response.data;
+    } catch (error) {
+      console.error('Error testing database connection:', error);
+      throw error;
+    }
+  }
 };
+
 export default apiService;
