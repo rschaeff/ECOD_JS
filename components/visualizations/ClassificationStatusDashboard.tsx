@@ -80,11 +80,11 @@ const ClassificationStatusDashboard: React.FC<ClassificationStatusDashboardProps
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Cluster Sets</SelectItem>
-                {data?.clusterSets.map(set => (
+                {(data?.clusterSets || []).map(set => (
                   <SelectItem key={set.id} value={set.id.toString()}>
                     {set.name}
                   </SelectItem>
-                )) || null }
+                ))}
               </SelectContent>
             </Select>
             <Button 
