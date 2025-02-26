@@ -342,6 +342,33 @@ export interface ReclassificationResponse {
   };
 }
 
+// Add this interface to the type definitions in services/api.ts
+export interface PriorityCluster {
+  id: string;
+  name: string;
+  size: number;
+  category: 'unclassified' | 'flagged' | 'reclassification' | 'diverse';
+  representativeDomain: string;
+  taxonomicDiversity: number;
+  structuralDiversity?: number;
+  t_group?: string;
+  t_group_name?: string;
+  cluster_number: number;
+  cluster_set_id: number;
+  requires_new_classification?: boolean;
+}
+
+export interface PriorityClustersResponse {
+  clusters: PriorityCluster[];
+  totals: {
+    unclassified: number;
+    flagged: number;
+    reclassification: number;
+    diverse: number;
+    all: number;
+  };
+}
+
 // API service functions
 const apiService = {
   // Dashboard data - split for better performance
@@ -741,6 +768,34 @@ const apiService = {
       throw error;
     }
   }
+
+  // Add this method to the apiService object in services/api.ts
+  async getPriorityClusters(params?: {
+    limit?: number;
+    category?: 'unclassified' | 'flagged' | 'reclassification' | 'diverse' | 'all';
+    exclude_singletons?: boolean;
+  }): Promise<PriorityClustersResponse> {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params) {
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined) {
+            queryParams.append(key, value.toString());
+          }
+        });
+      }
+
+      const response = await fetch(`${BASE_API_URL}/clusters/priority?${queryParams}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch priority clusters');
+      }
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching priority clusters:', error);
+      throw error;
+    }
+  }
+
 };
 
 export default apiService;

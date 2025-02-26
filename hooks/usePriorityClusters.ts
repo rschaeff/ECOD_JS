@@ -1,20 +1,7 @@
 // /hooks/usePriorityClusters.ts
-
+// /hooks/usePriorityClusters.ts
 import { useState, useEffect } from 'react';
-import axios from 'axios';
-
-// Define the priority cluster data structure
-export interface PriorityCluster {
-  id: string;
-  name: string;
-  size: number;
-  category: 'unclassified' | 'flagged' | 'reclassification' | 'diverse';
-  representativeDomain: string;
-  taxonomicDiversity: number;
-  structuralDiversity?: number;
-  t_group?: string;
-  t_group_name?: string;
-}
+import apiService, { PriorityCluster, PriorityClustersResponse } from '@/services/api';
 
 // Hook interface
 interface UsePriorityClustersResult {
@@ -23,12 +10,12 @@ interface UsePriorityClustersResult {
   error: string | null;
   refresh: () => void;
   refreshing: boolean;
+  totals: PriorityClustersResponse['totals'] | null;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-
-export function usePriorityClusters(limit: number = 5): UsePriorityClustersResult {
+export function usePriorityClusters(limit: number = 5, category: string = 'all'): UsePriorityClustersResult {
   const [data, setData] = useState<PriorityCluster[] | null>(null);
+  const [totals, setTotals] = useState<PriorityClustersResponse['totals'] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,22 +28,15 @@ export function usePriorityClusters(limit: number = 5): UsePriorityClustersResul
         setLoading(true);
       }
       
-      // Fetch priority clusters from the API
-      // This endpoint would need to be implemented on the backend to return clusters 
-      // in the required categories and exclude singletons
-      const response = await axios.get(`${API_URL}/clusters/priority`, {
-        params: {
-          limit,
-          exclude_singletons: true,
-          // Request some clusters from each category
-          categories: ['unclassified', 'flagged', 'reclassification', 'diverse'].join(',')
-        }
+      // Call the API service method
+      const response = await apiService.getPriorityClusters({
+        limit,
+        category: category !== 'all' ? category as any : undefined,
+        exclude_singletons: true
       });
       
-      // Additional check to make sure no singletons are included (belt and suspenders)
-      const filteredData = response.data.filter((cluster: PriorityCluster) => cluster.size > 1);
-      
-      setData(filteredData);
+      setData(response.clusters);
+      setTotals(response.totals);
       setError(null);
     } catch (err) {
       console.error('Error fetching priority clusters:', err);
@@ -70,7 +50,7 @@ export function usePriorityClusters(limit: number = 5): UsePriorityClustersResul
   // Initial data fetch
   useEffect(() => {
     fetchClusters();
-  }, [limit]);
+  }, [limit, category]);
 
   // Function to manually refresh data
   const refresh = () => {
@@ -78,7 +58,7 @@ export function usePriorityClusters(limit: number = 5): UsePriorityClustersResul
     fetchClusters(true);
   };
 
-  return { data, loading, error, refresh, refreshing };
+  return { data, totals, loading, error, refresh, refreshing };
 }
 
 // Optional: Alternative implementation if you need to mock data for development
