@@ -767,7 +767,7 @@ const apiService = {
       console.error('Error testing database connection:', error);
       throw error;
     }
-  }
+  },
 
   // Add this method to the apiService object in services/api.ts
   async getPriorityClusters(params?: {
