@@ -84,7 +84,7 @@ const ClassificationStatusDashboard: React.FC<ClassificationStatusDashboardProps
                   <SelectItem key={set.id} value={set.id.toString()}>
                     {set.name}
                   </SelectItem>
-                )) || null}
+                )) || null }
               </SelectContent>
             </Select>
             <Button 
