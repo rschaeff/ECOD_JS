@@ -142,6 +142,12 @@ async function getPriorityClusters(
   // Execute the queries
   const params = category !== 'all' ? [category, limit] : [limit];
   
+  // Add logging before executing queries
+  console.log('Executing count SQL query:', countQuery);
+  console.log('With count parameters:', category !== 'all' ? [category] : []);
+  console.log('Executing data SQL query:', dataQuery);
+  console.log('With data parameters:', params);
+  
   const [countResult, dataResult] = await Promise.all([
     pool.query(countQuery, category !== 'all' ? [category] : []),
     pool.query(dataQuery, params)
