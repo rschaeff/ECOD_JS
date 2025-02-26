@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Layout from '@/components/Layout';
-import { useCombinedClusterData } from '@/hooks/cluster';
+import { useCombinedClusterData } from '@/hooks/cluster/useCombinedClusterData';
 import ClusterHeader from '@/components/cluster/ClusterDetail/ClusterHeader';
 import ClusterMetricsCards from '@/components/cluster/ClusterDetail/ClusterMetricsCards';
 import MembersTab from '@/components/cluster/ClusterDetail/tabs/MembersTab';
