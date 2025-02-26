@@ -469,11 +469,11 @@ const DomainDetailPage: React.FC = () => {
                             domainData.secondaryStructure.ssString.length * 100)}%
                         </span>
                       </div>
-                      <Progress 
+                      {/*<Progress 
                         value={domainData.secondaryStructure.ssString.split('').filter(s => s === 'C').length / 
                           domainData.secondaryStructure.ssString.length * 100} 
                         className="h-2.5 bg-gray-200" 
-                      />
+                      />*/}
                     </div>
                   </div>
                 </div>
@@ -549,10 +549,11 @@ const DomainDetailPage: React.FC = () => {
                       <div className="text-sm font-medium">Confidence:</div>
                       <div className="text-sm">
                         <div className="flex items-center gap-2">
-                          <Progress 
+                          {/*<Progress 
                             value={domainData.structureInfo.confidenceScore * 100} 
                             className="h-2.5 bg-gray-200 flex-grow" 
-                          />
+                          />*/}
+                  
                           <span>{(domainData.structureInfo.confidenceScore * 100).toFixed(1)}%</span>
                         </div>
                       </div>
