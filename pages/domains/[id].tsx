@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-//import { Progress } from '@/components/ui/progress';
+import { Progress } from '@/components/ui/progress';
 import Layout from '@/components/Layout';
 
 // Mock domain data interface
@@ -439,11 +439,11 @@ const DomainDetailPage: React.FC = () => {
                             domainData.secondaryStructure.ssString.length * 100)}%
                         </span>
                       </div>
-                      {/*<Progress 
+                      <Progress 
                         value={domainData.secondaryStructure.ssString.split('').filter(s => s === 'H').length / 
                           domainData.secondaryStructure.ssString.length * 100} 
                         className="h-2.5 bg-gray-200" 
-                      />*/}
+                      />
                     </div>
                     
                     <div className="mb-4">
@@ -454,11 +454,11 @@ const DomainDetailPage: React.FC = () => {
                             domainData.secondaryStructure.ssString.length * 100)}%
                         </span>
                       </div>
-                      {/*<Progress 
+                      <Progress 
                         value={domainData.secondaryStructure.ssString.split('').filter(s => s === 'E').length / 
                           domainData.secondaryStructure.ssString.length * 100} 
                         className="h-2.5 bg-gray-200" 
-                      />*/}
+                      />
                     </div>
                     
                     <div>
@@ -469,11 +469,11 @@ const DomainDetailPage: React.FC = () => {
                             domainData.secondaryStructure.ssString.length * 100)}%
                         </span>
                       </div>
-                      {/*<Progress 
+                      <Progress 
                         value={domainData.secondaryStructure.ssString.split('').filter(s => s === 'C').length / 
                           domainData.secondaryStructure.ssString.length * 100} 
                         className="h-2.5 bg-gray-200" 
-                      />*/}
+                      />
                     </div>
                   </div>
                 </div>
@@ -553,7 +553,7 @@ const DomainDetailPage: React.FC = () => {
                             value={domainData.structureInfo.confidenceScore * 100} 
                             className="h-2.5 bg-gray-200 flex-grow" 
                           />*/}
-                  
+
                           <span>{(domainData.structureInfo.confidenceScore * 100).toFixed(1)}%</span>
                         </div>
                       </div>
