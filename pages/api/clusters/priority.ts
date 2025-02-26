@@ -49,8 +49,8 @@ async function getPriorityClusters(
   category: string = 'all',
   excludeSingletons: boolean = true
 ): Promise<PriorityClustersResponse> {
-  // Base query parts
-  let baseQuery = `
+ // Define the basic CTE for both queries
+  const clusterCTE = `
     WITH cluster_size AS (
       SELECT 
         cluster_id, 
@@ -92,41 +92,32 @@ async function getPriorityClusters(
       ) AS rep ON dc.id = rep.cluster_id
       LEFT JOIN swissprot.tgroup_names tn ON tn.tgroup_id = rep.t_group
       WHERE 1=1
+      ${excludeSingletons ? 'AND cs.size > 1' : ''}
+      ${category !== 'all' ? "AND CASE WHEN ca.id IS NULL THEN 'unclassified' WHEN ca.requires_new_classification = true THEN 'reclassification' WHEN ca.requires_new_classification = false AND (ca.structure_consistency >= 0.8 OR ca.taxonomic_diversity >= 0.7) THEN 'diverse' WHEN ca.id IS NOT NULL AND ca.analysis_notes LIKE '%flagged%' THEN 'flagged' ELSE 'unclassified' END = $1" : ''}
+    )
   `;
 
-  // Add singleton exclusion if requested
-  if (excludeSingletons) {
-    baseQuery += " AND cs.size > 1";
-  }
-
-  // Add category filter if specified
-  if (category !== 'all') {
-    baseQuery += ` AND CASE
-      WHEN ca.id IS NULL THEN 'unclassified'
-      WHEN ca.requires_new_classification = true THEN 'reclassification'
-      WHEN ca.requires_new_classification = false AND 
-           (ca.structure_consistency >= 0.8 OR ca.taxonomic_diversity >= 0.7) THEN 'diverse'
-      WHEN ca.id IS NOT NULL AND 
-           ca.analysis_notes LIKE '%flagged%' THEN 'flagged'
-      ELSE 'unclassified'
-    END = $1`;
-  }
+  // Parameters for the queries
+  const params = category !== 'all' ? [category, limit] : [limit];
+  const countParams = category !== 'all' ? [category] : [];
 
   // Get counts for each category
   const countQuery = `
+    ${clusterCTE}
     SELECT 
       SUM(CASE WHEN category = 'unclassified' THEN 1 ELSE 0 END) as unclassified,
       SUM(CASE WHEN category = 'flagged' THEN 1 ELSE 0 END) as flagged,
       SUM(CASE WHEN category = 'reclassification' THEN 1 ELSE 0 END) as reclassification,
       SUM(CASE WHEN category = 'diverse' THEN 1 ELSE 0 END) as diverse,
       COUNT(*) as all
-    FROM (${baseQuery}) as categorized_clusters
+    FROM cluster_basics
   `;
 
   // Query to get the actual cluster data
   const dataQuery = `
+    ${clusterCTE}
     SELECT *
-    FROM (${baseQuery}) as categorized_clusters
+    FROM cluster_basics
     ORDER BY 
       CASE 
         WHEN category = 'reclassification' THEN 1
@@ -139,17 +130,14 @@ async function getPriorityClusters(
     LIMIT $${category !== 'all' ? 2 : 1}
   `;
 
-  // Execute the queries
-  const params = category !== 'all' ? [category, limit] : [limit];
-  
-  // Add logging before executing queries
   console.log('Executing count SQL query:', countQuery);
-  console.log('With count parameters:', category !== 'all' ? [category] : []);
+  console.log('With count parameters:', countParams);
   console.log('Executing data SQL query:', dataQuery);
   console.log('With data parameters:', params);
-  
+
+  // Execute the queries
   const [countResult, dataResult] = await Promise.all([
-    pool.query(countQuery, category !== 'all' ? [category] : []),
+    pool.query(countQuery, countParams),
     pool.query(dataQuery, params)
   ]);
 
