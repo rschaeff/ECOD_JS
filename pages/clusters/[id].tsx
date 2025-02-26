@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-//import { Progress } from '@/components/ui/progress';
+import { Progress } from '@/components/ui/progress';
 import Layout from '@/components/Layout';
 import { exportClusterData } from '@/utils/exportUtils';
 import MSAViewer from '@/components/MSAViewer';
@@ -626,10 +626,10 @@ RGMIVMNDQLVAPNAQLKAFDNFMRRYTDKFNVPVKYKTKTYNFVEGDRG`,
                             {formatPercentage(validationData.taxonomicValidation.taxonomicDiversity)}
                           </span>
                         </div>
-                        {/*<Progress 
+                        <Progress 
                           value={validationData.taxonomicValidation.taxonomicDiversity * 100} 
                           className="h-2.5 bg-gray-200"
-                        />*/}
+                        />
                         <p className="text-xs text-gray-500 mt-1">Weighted measure of taxonomy spread across the cluster</p>
                       </div>
                       
@@ -640,10 +640,10 @@ RGMIVMNDQLVAPNAQLKAFDNFMRRYTDKFNVPVKYKTKTYNFVEGDRG`,
                             {formatPercentage(validationData.taxonomicValidation.tgroupHomogeneity)}
                           </span>
                         </div>
-                        {/*<Progress 
+                        <Progress 
                           value={validationData.taxonomicValidation.tgroupHomogeneity * 100} 
                           className="h-2.5 bg-gray-200"
-                        />*/}
+                        />
                         <p className="text-xs text-gray-500 mt-1">Percentage of domains assigned to the most common T-group</p>
                       </div>
                     </div>
