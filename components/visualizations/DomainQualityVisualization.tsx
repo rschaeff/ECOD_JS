@@ -34,7 +34,7 @@ import { Badge } from '@/components/ui/badge';
 const DomainQualityDistribution = () => {
   const [selectedJudge, setSelectedJudge] = useState('all');
   
-  // Mock data for visualization
+  // Mock data for visualization using the correct DPAM judge categories
   const mockData = {
     // Domain confidence distribution
     confidenceDistribution: [
@@ -44,12 +44,12 @@ const DomainQualityDistribution = () => {
       { category: 'Low (<50)', count: 754, percentage: 0.05 }
     ],
     
-    // DPAM judge distribution
+    // DPAM judge distribution with actual categories
     dpamJudgeDistribution: [
-      { judge: 'Very confident', count: 8213, percentage: 0.54 },
-      { judge: 'Confident', count: 4126, percentage: 0.27 },
-      { judge: 'Uncertain', count: 2156, percentage: 0.14 },
-      { judge: 'Unreliable', count: 755, percentage: 0.05 }
+      { judge: 'good_domain', count: 8213, percentage: 0.54 },
+      { judge: 'simple_topology', count: 3126, percentage: 0.20 },
+      { judge: 'partial_domain', count: 2156, percentage: 0.14 },
+      { judge: 'low_confidence', count: 1755, percentage: 0.12 }
     ],
     
     // Domain vs protein confidence (scatter plot data)
@@ -57,11 +57,31 @@ const DomainQualityDistribution = () => {
       const proteinPLDDT = Math.random() * 40 + 60; // 60-100 range
       const domainConfidence = proteinPLDDT * (Math.random() * 0.3 + 0.7); // Some correlation but with variance
       
+      // Assign judge categories based on both confidence and other factors
       let judge;
-      if (domainConfidence > 90) judge = 'Very confident';
-      else if (domainConfidence > 75) judge = 'Confident';
-      else if (domainConfidence > 50) judge = 'Uncertain';
-      else judge = 'Unreliable';
+      if (domainConfidence > 85) {
+        // High confidence domains can be good_domain, simple_topology, or partial_domain
+        const rand = Math.random();
+        if (rand < 0.6) judge = 'good_domain';
+        else if (rand < 0.8) judge = 'simple_topology';
+        else judge = 'partial_domain';
+      } 
+      else if (domainConfidence > 70) {
+        // Medium-high confidence could be any category but less likely good_domain
+        const rand = Math.random();
+        if (rand < 0.3) judge = 'good_domain';
+        else if (rand < 0.6) judge = 'simple_topology';
+        else if (rand < 0.8) judge = 'partial_domain';
+        else judge = 'low_confidence';
+      }
+      else {
+        // Lower confidence domains are mostly low_confidence
+        const rand = Math.random();
+        if (rand < 0.1) judge = 'good_domain';
+        else if (rand < 0.2) judge = 'simple_topology';
+        else if (rand < 0.4) judge = 'partial_domain';
+        else judge = 'low_confidence';
+      }
       
       return {
         proteinPLDDT,
@@ -70,35 +90,43 @@ const DomainQualityDistribution = () => {
       };
     }),
     
-    // Confidence by DPAM judge
+    // Confidence statistics by DPAM judge
     confidenceByJudge: [
-      { judge: 'Very confident', min: 78, q1: 88, median: 93, q3: 97, max: 100 },
-      { judge: 'Confident', min: 60, q1: 70, median: 82, q3: 88, max: 95 },
-      { judge: 'Uncertain', min: 45, q1: 55, median: 65, q3: 72, max: 85 },
-      { judge: 'Unreliable', min: 20, q1: 35, median: 45, q3: 52, max: 65 }
+      { judge: 'good_domain', min: 74, q1: 85, median: 92, q3: 96, max: 100 },
+      { judge: 'simple_topology', min: 68, q1: 78, median: 88, q3: 92, max: 98 },
+      { judge: 'partial_domain', min: 60, q1: 72, median: 83, q3: 89, max: 95 },
+      { judge: 'low_confidence', min: 45, q1: 55, median: 65, q3: 75, max: 85 }
     ],
     
     // Distribution of DPAM prob
     dpamProbDistribution: [
-      { range: '0.0-0.1', count: 120 },
-      { range: '0.1-0.2', count: 235 },
-      { range: '0.2-0.3', count: 402 },
-      { range: '0.3-0.4', count: 587 },
-      { range: '0.4-0.5', count: 803 },
-      { range: '0.5-0.6', count: 1245 },
-      { range: '0.6-0.7', count: 1876 },
+      { range: '0.0-0.1', count: 320 },
+      { range: '0.1-0.2', count: 535 },
+      { range: '0.2-0.3', count: 702 },
+      { range: '0.3-0.4', count: 987 },
+      { range: '0.4-0.5', count: 1203 },
+      { range: '0.5-0.6', count: 1545 },
+      { range: '0.6-0.7', count: 2076 },
       { range: '0.7-0.8', count: 2543 },
-      { range: '0.8-0.9', count: 3687 },
-      { range: '0.9-1.0', count: 4752 }
+      { range: '0.8-0.9', count: 3087 },
+      { range: '0.9-1.0', count: 2252 }
     ],
     
     // DPAM confidence distribution by judge over score ranges
     dpamConfidenceByJudge: [
-      { probRange: '0.0-0.2', veryConfident: 0, confident: 12, uncertain: 125, unreliable: 218 },
-      { probRange: '0.2-0.4', veryConfident: 18, confident: 145, uncertain: 427, unreliable: 399 },
-      { probRange: '0.4-0.6', veryConfident: 154, confident: 742, uncertain: 895, unreliable: 138 },
-      { probRange: '0.6-0.8', veryConfident: 1834, confident: 2012, uncertain: 573, unreliable: 0 },
-      { probRange: '0.8-1.0', veryConfident: 6207, confident: 1215, uncertain: 17, unreliable: 0 }
+      { probRange: '0.0-0.2', good_domain: 0, simple_topology: 12, partial_domain: 125, low_confidence: 718 },
+      { probRange: '0.2-0.4', good_domain: 18, simple_topology: 145, partial_domain: 427, low_confidence: 799 },
+      { probRange: '0.4-0.6', good_domain: 354, simple_topology: 642, partial_domain: 795, low_confidence: 238 },
+      { probRange: '0.6-0.8', good_domain: 2834, simple_topology: 1212, partial_domain: 573, low_confidence: 0 },
+      { probRange: '0.8-1.0', good_domain: 5007, simple_topology: 1115, partial_domain: 217, low_confidence: 0 }
+    ],
+    
+    // Secondary structure by judge category
+    secondaryStructure: [
+      { judge: 'good_domain', helices: 5.2, strands: 4.8 },
+      { judge: 'simple_topology', helices: 2.1, strands: 1.4 },
+      { judge: 'partial_domain', helices: 4.6, strands: 3.8 },
+      { judge: 'low_confidence', helices: 3.5, strands: 2.2 }
     ],
     
     // Quality over time data
@@ -125,14 +153,17 @@ const DomainQualityDistribution = () => {
 
   // Colors for different categories
   const COLORS = {
+    // Confidence levels
     'Very High (>90)': '#00A36A',
     'High (70-90)': '#00C49F', 
     'Medium (50-70)': '#FFBB28', 
     'Low (<50)': '#FF6B6B',
-    'Very confident': '#00A36A',
-    'Confident': '#00C49F',
-    'Uncertain': '#FFBB28',
-    'Unreliable': '#FF6B6B'
+    
+    // DPAM judge categories (chosen based on what they represent)
+    'good_domain': '#00A36A',     // Green - high confidence with compact core
+    'simple_topology': '#4682B4', // Blue - high confidence but simple structure
+    'partial_domain': '#FFBB28',  // Yellow - high confidence but poor coverage
+    'low_confidence': '#FF6B6B'   // Red - low confidence
   };
   
   // Format percentage
@@ -143,20 +174,44 @@ const DomainQualityDistribution = () => {
     return COLORS[judge] || '#8884d8';
   };
   
+  // Function to get human-readable judge name
+  const getReadableJudgeName = (judge) => {
+    const nameMap = {
+      'good_domain': 'Good Domain',
+      'simple_topology': 'Simple Topology',
+      'partial_domain': 'Partial Domain',
+      'low_confidence': 'Low Confidence'
+    };
+    
+    return nameMap[judge] || judge;
+  };
+  
   // Function to get status badge
   const getJudgeBadge = (judge) => {
     const colorMap = {
-      'Very confident': 'bg-emerald-500',
-      'Confident': 'bg-green-500',
-      'Uncertain': 'bg-yellow-500',
-      'Unreliable': 'bg-red-500'
+      'good_domain': 'bg-emerald-500',
+      'simple_topology': 'bg-blue-500',
+      'partial_domain': 'bg-yellow-500',
+      'low_confidence': 'bg-red-500'
     };
     
     return (
       <Badge className={colorMap[judge] || 'bg-gray-500'}>
-        {judge}
+        {getReadableJudgeName(judge)}
       </Badge>
     );
+  };
+  
+  // Function to get judge description
+  const getJudgeDescription = (judge) => {
+    const descMap = {
+      'good_domain': 'High confidence domain with a compact core',
+      'simple_topology': 'High confidence domain with little secondary structure',
+      'partial_domain': 'High confidence domain with poor coverage to reference hit',
+      'low_confidence': 'Low confidence domain with a compact core, not assigned'
+    };
+    
+    return descMap[judge] || '';
   };
   
   // Filter data based on selected judge
@@ -173,16 +228,15 @@ const DomainQualityDistribution = () => {
           <p className="text-sm font-medium">{`DPAM Probability: ${label}`}</p>
           {payload.map((entry, index) => (
             <p key={index} className="text-xs" style={{ color: entry.color }}>
-              {`${entry.name}: ${entry.value} domains`}
+              {`${getReadableJudgeName(entry.name)}: ${entry.value} domains`}
             </p>
           ))}
         </div>
       );
-    }
-    return null;
-  };
+    };
+  },
 
-  // Render section of DomainQualityDistribution component
+// Render section of DomainQualityDistribution component
 return (
   <Card>
     <CardHeader>
@@ -200,10 +254,10 @@ return (
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
-            <SelectItem value="Very confident">Very confident</SelectItem>
-            <SelectItem value="Confident">Confident</SelectItem>
-            <SelectItem value="Uncertain">Uncertain</SelectItem>
-            <SelectItem value="Unreliable">Unreliable</SelectItem>
+            <SelectItem value="good_domain">Good Domain</SelectItem>
+            <SelectItem value="simple_topology">Simple Topology</SelectItem>
+            <SelectItem value="partial_domain">Partial Domain</SelectItem>
+            <SelectItem value="low_confidence">Low Confidence</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -249,7 +303,7 @@ return (
                           className="w-3 h-3 rounded-full mr-2"
                           style={{ backgroundColor: getJudgeColor(item.judge) }}
                         ></div>
-                        <span className="text-sm">{item.judge}</span>
+                        <span className="text-sm">{getReadableJudgeName(item.judge)}</span>
                       </div>
                       <span className="text-sm font-medium">{formatPercentage(item.percentage)}</span>
                     </div>
@@ -360,19 +414,20 @@ return (
                               <p className="font-medium">Domain Details</p>
                               <p>Protein pLDDT: {data.proteinPLDDT.toFixed(1)}</p>
                               <p>Domain Confidence: {data.domainConfidence.toFixed(1)}</p>
-                              <p>DPAM Judge: {data.judge}</p>
+                              <p>DPAM Judge: {getReadableJudgeName(data.judge)}</p>
+                              <p className="text-xs italic mt-1">{getJudgeDescription(data.judge)}</p>
                             </div>
                           );
                         }
                         return null;
                       }}
                     />
-                    {['Very confident', 'Confident', 'Uncertain', 'Unreliable'].map((judge) => {
+                    {['good_domain', 'simple_topology', 'partial_domain', 'low_confidence'].map((judge) => {
                       const filteredData = filterByJudge(mockData.correlationData).filter(d => d.judge === judge);
                       return filteredData.length > 0 ? (
                         <Scatter
                           key={judge}
-                          name={judge}
+                          name={getReadableJudgeName(judge)}
                           data={filteredData}
                           fill={getJudgeColor(judge)}
                         />
@@ -401,7 +456,7 @@ return (
                   <BarChart
                     data={mockData.confidenceByJudge}
                     layout="vertical"
-                    margin={{ top: 20, right: 20, bottom: 20, left: 60 }}
+                    margin={{ top: 20, right: 20, bottom: 20, left: 100 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis type="number" domain={[0, 100]} />
@@ -410,6 +465,7 @@ return (
                       type="category" 
                       scale="band"
                       tick={{ fill: '#666' }}
+                      tickFormatter={getReadableJudgeName}
                     />
                     <Tooltip 
                       content={({ active, payload, label }) => {
@@ -417,7 +473,8 @@ return (
                           const data = payload[0].payload;
                           return (
                             <div className="bg-white p-3 border rounded shadow-sm">
-                              <p className="font-medium">{data.judge}</p>
+                              <p className="font-medium">{getReadableJudgeName(data.judge)}</p>
+                              <p className="text-xs italic mb-2">{getJudgeDescription(data.judge)}</p>
                               <p>Min: {data.min}</p>
                               <p>Q1: {data.q1}</p>
                               <p>Median: {data.median}</p>
@@ -490,60 +547,33 @@ return (
               </div>
             </div>
             
-            {/* Line chart showing domain vs protein quality correlation */}
+            {/* Secondary structure comparison */}
             <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Quality Relationship Trend</h3>
+              <h3 className="text-sm font-medium text-gray-500 mb-2">Secondary Structure by Judge Category</h3>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={Array.from({ length: 21 }, (_, i) => {
-                      const proteinQuality = 50 + i * 2.5;
-                      // Simulated relationship with some noise
-                      const baseQuality = proteinQuality * 0.9 + Math.random() * 5;
-                      return {
-                        proteinQuality,
-                        averageDomainQuality: baseQuality > proteinQuality ? proteinQuality : baseQuality,
-                        upperBound: Math.min(100, baseQuality + 10),
-                        lowerBound: Math.max(0, baseQuality - 15)
-                      };
-                    })}
+                  <BarChart
+                    data={mockData.secondaryStructure}
                     margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis 
-                      dataKey="proteinQuality" 
-                      label={{ value: 'Protein pLDDT', position: 'bottom', offset: 0 }} 
+                      dataKey="judge" 
+                      tickFormatter={getReadableJudgeName}
                     />
-                    <YAxis domain={[0, 100]} label={{ value: 'Domain Confidence', angle: -90, position: 'left' }} />
-                    <Tooltip formatter={(value) => [value.toFixed(1), '']} />
+                    <YAxis label={{ value: 'Average Count', angle: -90, position: 'insideLeft' }} />
+                    <Tooltip 
+                      formatter={(value) => [value.toFixed(1), '']}
+                      labelFormatter={getReadableJudgeName}
+                    />
                     <Legend />
-                    <Line 
-                      type="monotone" 
-                      dataKey="averageDomainQuality" 
-                      name="Avg Domain Confidence" 
-                      stroke="#8884d8" 
-                      activeDot={{ r: 8 }} 
-                      strokeWidth={2}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="upperBound" 
-                      name="Upper Range" 
-                      stroke="#82ca9d" 
-                      strokeDasharray="5 5" 
-                      strokeWidth={1}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="lowerBound" 
-                      name="Lower Range" 
-                      stroke="#ffc658" 
-                      strokeDasharray="5 5" 
-                      strokeWidth={1}
-                    />
-                    <Brush dataKey="proteinQuality" height={30} stroke="#8884d8" />
-                  </LineChart>
+                    <Bar dataKey="helices" name="Helices" fill="#8884d8" />
+                    <Bar dataKey="strands" name="Strands" fill="#82ca9d" />
+                  </BarChart>
                 </ResponsiveContainer>
+              </div>
+              <div className="text-center text-xs mt-2 text-gray-500">
+                <p>Note the minimal secondary structure in domains classified as "Simple Topology"</p>
               </div>
             </div>
           </div>
@@ -566,7 +596,7 @@ return (
                       fill="#8884d8"
                       dataKey="count"
                       nameKey="judge"
-                      label={({ judge, percent }) => `${judge} (${(percent * 100).toFixed(0)}%)`}
+                      label={({ judge, percent }) => `${(percent * 100).toFixed(0)}%`}
                     >
                       {mockData.dpamJudgeDistribution.map((entry, index) => (
                         <Cell 
@@ -575,8 +605,13 @@ return (
                         />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value) => [value.toLocaleString(), 'Domains']} />
-                    <Legend />
+                    <Tooltip 
+                      formatter={(value) => [value.toLocaleString(), 'Domains']}
+                      labelFormatter={getReadableJudgeName}
+                    />
+                    <Legend 
+                      formatter={getReadableJudgeName}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -584,7 +619,7 @@ return (
             
             {/* DPAM Judge by confidence range (stacked bar) */}
             <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-2">DPAM Judge by Confidence Range</h3>
+              <h3 className="text-sm font-medium text-gray-500 mb-2">DPAM Judge by DPAM Probability Range</h3>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={mockData.dpamConfidenceByJudge}>
@@ -592,30 +627,30 @@ return (
                     <XAxis dataKey="probRange" />
                     <YAxis />
                     <Tooltip content={<CustomTooltip />} />
-                    <Legend />
+                    <Legend formatter={getReadableJudgeName} />
                     <Bar 
-                      dataKey="veryConfident" 
-                      name="Very confident" 
+                      dataKey="good_domain" 
+                      name="good_domain" 
                       stackId="a" 
-                      fill={getJudgeColor('Very confident')} 
+                      fill={getJudgeColor('good_domain')} 
                     />
                     <Bar 
-                      dataKey="confident" 
-                      name="Confident" 
+                      dataKey="simple_topology" 
+                      name="simple_topology" 
                       stackId="a" 
-                      fill={getJudgeColor('Confident')} 
+                      fill={getJudgeColor('simple_topology')} 
                     />
                     <Bar 
-                      dataKey="uncertain" 
-                      name="Uncertain" 
+                      dataKey="partial_domain" 
+                      name="partial_domain" 
                       stackId="a" 
-                      fill={getJudgeColor('Uncertain')} 
+                      fill={getJudgeColor('partial_domain')} 
                     />
                     <Bar 
-                      dataKey="unreliable" 
-                      name="Unreliable" 
+                      dataKey="low_confidence" 
+                      name="low_confidence" 
                       stackId="a" 
-                      fill={getJudgeColor('Unreliable')} 
+                      fill={getJudgeColor('low_confidence')} 
                     />
                   </BarChart>
                 </ResponsiveContainer>
@@ -631,6 +666,9 @@ return (
                     <tr>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Judge Category
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Description
                       </th>
                       <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Domain Count
@@ -653,9 +691,12 @@ return (
                           <div className="flex items-center">
                             <div className="flex-shrink-0 h-4 w-4 rounded-full" style={{ backgroundColor: getJudgeColor(item.judge) }}></div>
                             <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">{item.judge}</div>
+                              <div className="text-sm font-medium text-gray-900">{getReadableJudgeName(item.judge)}</div>
                             </div>
                           </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-500">{getJudgeDescription(item.judge)}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
                           {item.count.toLocaleString()}
@@ -664,16 +705,16 @@ return (
                           {formatPercentage(item.percentage)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
-                          {item.judge === 'Very confident' ? '0.87' : 
-                           item.judge === 'Confident' ? '0.72' : 
-                           item.judge === 'Uncertain' ? '0.53' : 
-                           '0.34'}
+                          {item.judge === 'good_domain' ? '0.87' : 
+                           item.judge === 'simple_topology' ? '0.76' : 
+                           item.judge === 'partial_domain' ? '0.70' : 
+                           '0.42'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
-                          {item.judge === 'Very confident' ? '92.4' : 
-                           item.judge === 'Confident' ? '81.7' : 
-                           item.judge === 'Uncertain' ? '63.5' : 
-                           '48.2'}
+                          {item.judge === 'good_domain' ? '92.4' : 
+                           item.judge === 'simple_topology' ? '86.5' : 
+                           item.judge === 'partial_domain' ? '83.8' : 
+                           '62.3'}
                         </td>
                       </tr>
                     ))}
@@ -684,62 +725,39 @@ return (
             
             {/* Additional Analysis - Correlation Matrix */}
             <div className="col-span-1 md:col-span-2">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">DPAM Metrics Correlation</h3>
+              <h3 className="text-sm font-medium text-gray-500 mb-2">DPAM Metrics Analysis</h3>
               <div className="bg-white p-4 rounded-lg border shadow-sm">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <h4 className="text-sm font-medium mb-3">Key Observations</h4>
                     <ul className="list-disc ml-5 space-y-2 text-sm">
-                      <li>Strong correlation (0.86) between protein pLDDT and domain DPAM probability for high-confidence domains</li>
-                      <li>DPAM judge categories show clear separation in confidence distributions</li>
-                      <li><span className="font-medium">Very confident</span> domains typically have protein pLDDT >85 and DPAM prob >0.8</li>
-                      <li><span className="font-medium">Uncertain</span> domains often come from proteins with moderate pLDDT (60-75)</li>
-                      <li>Domain confidence tends to be slightly lower than overall protein pLDDT</li>
+                      <li>Strong correlation (0.86) between protein pLDDT and domain DPAM probability for domains classified as "good_domain"</li>
+                      <li>Domains classified as "simple_topology" have high confidence but minimal secondary structure</li>
+                      <li>The "partial_domain" classification indicates good confidence but incomplete domain boundaries</li>
+                      <li>"low_confidence" domains are predominantly found in the lower DPAM probability ranges (below 0.5)</li>
+                      <li>Secondary structure counts can help distinguish between "good_domain" and "simple_topology" categories</li>
                     </ul>
                   </div>
                   <div>
-                    <h4 className="text-sm font-medium mb-3">Correlation Matrix</h4>
-                    <table className="min-w-full text-sm">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500"></th>
-                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Protein pLDDT</th>
-                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">DPAM Prob</th>
-                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">HH Prob</th>
-                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">Judge Score</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr className="bg-white">
-                          <td className="px-3 py-2 font-medium">Protein pLDDT</td>
-                          <td className="px-3 py-2 bg-blue-100">1.00</td>
-                          <td className="px-3 py-2">0.78</td>
-                          <td className="px-3 py-2">0.62</td>
-                          <td className="px-3 py-2">0.72</td>
-                        </tr>
-                        <tr className="bg-gray-50">
-                          <td className="px-3 py-2 font-medium">DPAM Prob</td>
-                          <td className="px-3 py-2">0.78</td>
-                          <td className="px-3 py-2 bg-blue-100">1.00</td>
-                          <td className="px-3 py-2">0.85</td>
-                          <td className="px-3 py-2">0.91</td>
-                        </tr>
-                        <tr className="bg-white">
-                          <td className="px-3 py-2 font-medium">HH Prob</td>
-                          <td className="px-3 py-2">0.62</td>
-                          <td className="px-3 py-2">0.85</td>
-                          <td className="px-3 py-2 bg-blue-100">1.00</td>
-                          <td className="px-3 py-2">0.80</td>
-                        </tr>
-                        <tr className="bg-gray-50">
-                          <td className="px-3 py-2 font-medium">Judge Score</td>
-                          <td className="px-3 py-2">0.72</td>
-                          <td className="px-3 py-2">0.91</td>
-                          <td className="px-3 py-2">0.80</td>
-                          <td className="px-3 py-2 bg-blue-100">1.00</td>
-                        </tr>
-                      </tbody>
-                    </table>
+                    <h4 className="text-sm font-medium mb-3">DPAM Judge Category Insights</h4>
+                    <div className="space-y-3">
+                      <div className="p-2 border rounded-md bg-emerald-50">
+                        <span className="font-medium text-emerald-800">Good Domain:</span> 
+                        <p className="text-xs mt-1 text-emerald-700">High-confidence domains with well-defined cores and sufficient secondary structure. These domains have the highest average pLDDT scores and DPAM probabilities.</p>
+                      </div>
+                      <div className="p-2 border rounded-md bg-blue-50">
+                        <span className="font-medium text-blue-800">Simple Topology:</span> 
+                        <p className="text-xs mt-1 text-blue-700">High-confidence domains with minimal secondary structure. Good confidence but structurally simple, often having fewer helices and strands than good domains.</p>
+                      </div>
+                      <div className="p-2 border rounded-md bg-yellow-50">
+                        <span className="font-medium text-yellow-800">Partial Domain:</span> 
+                        <p className="text-xs mt-1 text-yellow-700">High-confidence domains with poor coverage to reference. May represent truncated or incomplete domains with otherwise good structural confidence.</p>
+                      </div>
+                      <div className="p-2 border rounded-md bg-red-50">
+                        <span className="font-medium text-red-800">Low Confidence:</span> 
+                        <p className="text-xs mt-1 text-red-700">Domains with compact cores but low prediction confidence. These are typically found in regions with lower pLDDT scores and have not been confidently assigned.</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -758,5 +776,7 @@ return (
   </Card>
 );
 };
+
+
 
 export default DomainQualityDistribution;
