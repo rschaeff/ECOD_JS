@@ -234,7 +234,7 @@ const DomainQualityDistribution = () => {
         </div>
       );
     };
-  },
+  };
 
 // Render section of DomainQualityDistribution component
 return (
