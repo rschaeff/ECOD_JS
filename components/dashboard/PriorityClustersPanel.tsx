@@ -26,7 +26,8 @@ const PriorityClusterPanel: React.FC<PriorityClusterPanelProps> = ({
   className,
   limit = 5
 }) => {
-  const { data, loading, error, refresh, refreshing } = usePriorityClusters(limit);
+  //const { data, loading, error, refresh, refreshing } = usePriorityClusters(limit);
+  const { data, loading, error, refresh, refreshing } = usePriorityClustersMock(limit);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
   // Format for percentage display
