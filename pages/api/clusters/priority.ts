@@ -89,7 +89,7 @@ async function getPriorityClusters(
         FROM swissprot.domain_cluster_members dcm
         JOIN swissprot.domain d ON dcm.domain_id = d.id
         WHERE dcm.is_representative = true
-      ) rep ON dc.id = rep.cluster_id
+      ) AS rep ON dc.id = rep.cluster_id
       LEFT JOIN swissprot.tgroup_names tn ON tn.tgroup_id = rep.t_group
       WHERE 1=1
   `;
@@ -150,7 +150,7 @@ async function getPriorityClusters(
   // Format the response
   const clusters: PriorityCluster[] = dataResult.rows.map(row => ({
     id: row.id.toString(),
-    name: `Cluster-${row.cluster_number}`,
+    name: `Cluster-${row.id.toString()}`,
     size: row.size,
     category: row.category,
     representativeDomain: row.representative_domain || 'Unknown',
