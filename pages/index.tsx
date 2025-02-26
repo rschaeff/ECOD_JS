@@ -48,7 +48,7 @@ export default function DomainClassificationDashboard() {
               onClusterSetChange={setSelectedClusterSet}
             />*/}
             
-            <RecentClustersPanel />
+            <PriorityClustersPanel />
           </div>
 
           {/* Sidebar */}
