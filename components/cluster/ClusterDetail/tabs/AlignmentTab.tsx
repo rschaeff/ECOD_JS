@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Download, RefreshCw } from 'lucide-react';
 import { useClusterMsa } from '@/hooks/cluster';
-import ErrorDisplay from '../shared/ErrorDisplay';
+import ErrorDisplay from '../../shared/ErrorDisplay';
 
 interface AlignmentTabProps {
   clusterId: number;
