@@ -8,7 +8,8 @@ import ClassificationStatusDashboard from '@/components/visualizations/Classific
 //import StructureQualityVisualization from '@/components/visualizations/StructureQualityVisualization';
 import DomainQualityVisualization from '@/components/visualizations/DomainQualityVisualization';
 //import ClusterSetsTable    from '@/components/dashboard/ClusterSetsTable';
-import RecentClustersPanel from '@/components/dashboard/RecentClustersPanel';
+//import RecentClustersPanel from '@/components/dashboard/RecentClustersPanel';
+import PriorityClustersPanel from '@/components/dashboard/PriorityClustersPanel';
 //import ReclassificationStats from '@/components/visualizations/ReclassificationStats';
 //import ActivityFeed from '@/components/dashboard/ActivityFeed';
 //import PendingReclassificationsPanel from '@/components/dashboard/PendingReclassificationsPanel';
