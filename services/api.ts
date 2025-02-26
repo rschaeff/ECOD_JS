@@ -617,7 +617,7 @@ const apiService = {
   // Classification data
   async getClassificationData(): Promise<ClassificationData> {
     try {
-      const response = await api.get(`${BASE_API_URL}/classification`);
+      const response = await fetch(`${BASE_API_URL}/classification`);
       return response.data;
     } catch (error) {
       console.error('Error fetching classification data:', error);
@@ -628,7 +628,7 @@ const apiService = {
   // Structure quality data
   async getStructureQualityData(): Promise<StructureQualityData> {
     try {
-      const response = await api.get(`${BASE_API_URL}/structure-quality`);
+      const response = await fetch(`${BASE_API_URL}/structure-quality`);
       return response.data;
     } catch (error) {
       console.error('Error fetching structure quality data:', error);
@@ -639,7 +639,7 @@ const apiService = {
   // Reclassification statistics
   async getReclassificationStats(): Promise<ReclassificationStats> {
     try {
-      const response = await api.get(`${BASE_API_URL}/reclassification-stats`);
+      const response = await fetch(`${BASE_API_URL}/reclassification-stats`);
       return response.data;
     } catch (error) {
       console.error('Error fetching reclassification statistics:', error);
