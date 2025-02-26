@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { usePriorityClusters } from '@/hooks/usePriorityClusters';
+import { usePriorityClusters, usePriorityClustersMock } from '@/hooks/usePriorityClusters';
 
 interface PriorityClusterPanelProps {
   className?: string;
