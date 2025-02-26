@@ -101,7 +101,7 @@ const mockClassificationTimeline = [
 
 const ClassificationStatusDashboard = () => {
   const [activeTab, setActiveTab] = useState('phyletic');
-  const [selectedClusterSet, setSelectedClusterSet] = useState('all');
+  const [selectedClusterSet, setSelectedClusterSet] = useState('90'); // Default to highest identity threshold
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
@@ -163,10 +163,10 @@ const ClassificationStatusDashboard = () => {
                 <SelectValue placeholder="Select cluster set" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Cluster Sets</SelectItem>
                 <SelectItem value="90">SwissProt-90</SelectItem>
                 <SelectItem value="70">SwissProt-70</SelectItem>
                 <SelectItem value="50">SwissProt-50</SelectItem>
+                <SelectItem value="30">SwissProt-30</SelectItem>
               </SelectContent>
             </Select>
             <Button 
@@ -176,6 +176,16 @@ const ClassificationStatusDashboard = () => {
               disabled={refreshing || loading}
             >
               <RefreshCw className={`h-4 w-4 ${refreshing || loading ? 'animate-spin' : ''}`} />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                // Open a comparison view that would show stats across all cluster sets
+                alert('This would open a comparison view between cluster sets');
+              }}
+            >
+              Compare Sets
             </Button>
           </div>
         </div>
@@ -190,29 +200,32 @@ const ClassificationStatusDashboard = () => {
           
           {/* New Phyletic Distribution Tab */}
           <TabsContent value="phyletic">
-            <div className="mb-3 flex justify-between items-center">
-              <div className="text-sm font-medium">
-                {phyleticView === 'overview' ? 
-                  'Overview of cluster distribution by phyletic pattern' : 
-                  phyleticView === 'mono' ? 
-                  'Breakdown of monophyletic clusters by phylum' : 
-                  'Breakdown of multi-phyletic clusters by kingdom combinations'}
-              </div>
+            <div className="h-10 flex items-center justify-between mb-2 px-1">
               <div>
-                <Select 
-                  value={phyleticView} 
-                  onValueChange={setPhyleticView}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select view" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="overview">Overview</SelectItem>
-                    <SelectItem value="mono">Monophyletic Breakdown</SelectItem>
-                    <SelectItem value="multi">Multi-phyletic Breakdown</SelectItem>
-                  </SelectContent>
-                </Select>
+                <span className="text-sm font-medium bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                  Cluster Set: SwissProt-{selectedClusterSet} ({selectedClusterSet}% sequence identity)
+                </span>
               </div>
+              {activeTab === 'phyletic' && (
+                <div>
+                  <span className="text-xs text-gray-500">
+                    Toggle view:
+                  </span>{' '}
+                  <Select 
+                    value={phyleticView} 
+                    onValueChange={setPhyleticView}
+                  >
+                    <SelectTrigger className="w-[180px] h-8 text-sm">
+                      <SelectValue placeholder="Select view" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="overview">Overview</SelectItem>
+                      <SelectItem value="mono">Monophyletic Breakdown</SelectItem>
+                      <SelectItem value="multi">Multi-phyletic Breakdown</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
             
             <div className="h-80">
@@ -333,25 +346,32 @@ const ClassificationStatusDashboard = () => {
           
           {/* Improved Structural Groups Tab */}
           <TabsContent value="structural">
-            <div className="mb-3 flex justify-between items-center">
-              <div className="text-sm font-medium">
-                Distribution of clusters by structural group consistency
-              </div>
+            <div className="h-10 flex items-center justify-between mb-2 px-1">
               <div>
-                <Select 
-                  value={selectedStructuralView} 
-                  onValueChange={setSelectedStructuralView}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select view" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="overview">Overview</SelectItem>
-                    <SelectItem value="tgroup-detail">T-Group Details</SelectItem>
-                    <SelectItem value="hgroup-detail">H-Group Details</SelectItem>
-                  </SelectContent>
-                </Select>
+                <span className="text-sm font-medium bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                  Cluster Set: SwissProt-{selectedClusterSet} ({selectedClusterSet}% sequence identity)
+                </span>
               </div>
+              {activeTab === 'structural' && (
+                <div>
+                  <span className="text-xs text-gray-500">
+                    Toggle view:
+                  </span>{' '}
+                  <Select 
+                    value={selectedStructuralView} 
+                    onValueChange={setSelectedStructuralView}
+                  >
+                    <SelectTrigger className="w-[180px] h-8 text-sm">
+                      <SelectValue placeholder="Select view" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="overview">Overview</SelectItem>
+                      <SelectItem value="tgroup-detail">T-Group Details</SelectItem>
+                      <SelectItem value="hgroup-detail">H-Group Details</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
             
             <div className="h-80">
@@ -467,25 +487,32 @@ const ClassificationStatusDashboard = () => {
           
           {/* Improved Classification Status Tab */}
           <TabsContent value="classification">
-            <div className="mb-3 flex justify-between items-center">
-              <div className="text-sm font-medium">
-                Distribution of clusters by classification status and confidence
-              </div>
+            <div className="h-10 flex items-center justify-between mb-2 px-1">
               <div>
-                <Select 
-                  value={selectedClassificationView} 
-                  onValueChange={setSelectedClassificationView}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select view" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="status">Status Distribution</SelectItem>
-                    <SelectItem value="confidence">Confidence Levels</SelectItem>
-                    <SelectItem value="timeline">Classification Timeline</SelectItem>
-                  </SelectContent>
-                </Select>
+                <span className="text-sm font-medium bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                  Cluster Set: SwissProt-{selectedClusterSet} ({selectedClusterSet}% sequence identity)
+                </span>
               </div>
+              {activeTab === 'classification' && (
+                <div>
+                  <span className="text-xs text-gray-500">
+                    Toggle view:
+                  </span>{' '}
+                  <Select 
+                    value={selectedClassificationView} 
+                    onValueChange={setSelectedClassificationView}
+                  >
+                    <SelectTrigger className="w-[180px] h-8 text-sm">
+                      <SelectValue placeholder="Select view" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="status">Status Distribution</SelectItem>
+                      <SelectItem value="confidence">Confidence Levels</SelectItem>
+                      <SelectItem value="timeline">Classification Timeline</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
             
             <div className="h-80">
