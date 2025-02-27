@@ -258,8 +258,6 @@ const DomainQualityDistribution = () => {
     };
   };  
 
-  const formatPercentage = (value) => `${(value * 100).toFixed(1)}%`;
-  
   // Determine which data to use (real or mock)
   const displayData = domainData || mockData;
 
