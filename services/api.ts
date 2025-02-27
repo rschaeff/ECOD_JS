@@ -796,9 +796,9 @@ const apiService = {
     }
   },
 
-  async getDomainStructure(domainId: number): Promise<StructureFile[]> {
+async getDomainStructure(domainId: number): Promise<StructureFile[]> {
   try {
-    const response = await fetch(`${BASE_API_URL}/structures/domain/${domainId}`);
+    const response = await fetch(`${BASE_API_URL}/domain/${domainId}/structures`);
     if (!response.ok) {
       throw new Error(`Failed to fetch structures for domain ${domainId}`);
     }
@@ -811,7 +811,7 @@ const apiService = {
 
 async getProteinStructure(unpAcc: string): Promise<StructureFile[]> {
   try {
-    const response = await fetch(`${BASE_API_URL}/structures/protein/${unpAcc}`);
+    const response = await fetch(`${BASE_API_URL}/protein/${unpAcc}/structures`);
     if (!response.ok) {
       throw new Error(`Failed to fetch structures for protein ${unpAcc}`);
     }
