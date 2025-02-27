@@ -25,13 +25,17 @@ const MoleculeViewer = ({
   const [colorScheme, setColorScheme] = useState("chain");
   const [error, setError] = useState(null);
   const [loadingState, setLoadingState] = useState(isLoading);
+  const [molstarLoaded, setMolstarLoaded] = useState(false);
   
   // Load Mol* plugin and scripts
   useEffect(() => {
     // This would normally be loaded in the head of the HTML document
     // or imported as NPM modules, but for this example we'll load it dynamically
     const loadMolstarScripts = async () => {
-      if (window.molstar) return;
+      if (window.molstar) {
+        setMolstarLoaded(true);
+        return;
+      }
       
       try {
         // Load Mol* CSS
@@ -46,7 +50,10 @@ const MoleculeViewer = ({
         script.async = true;
         
         const scriptPromise = new Promise((resolve, reject) => {
-          script.onload = resolve;
+          script.onload = () => {
+            setMolstarLoaded(true);
+            resolve();
+          };
           script.onerror = reject;
         });
         
@@ -63,17 +70,21 @@ const MoleculeViewer = ({
     loadMolstarScripts();
   }, []);
   
-  // Initialize the viewer
+  // Initialize the viewer when molstar is loaded
   useEffect(() => {
+    if (!molstarLoaded || !viewerContainerRef.current) return;
+    
     const initViewer = async () => {
-      if (!window.molstar || !viewerContainerRef.current) return;
-      
       try {
         setLoadingState(true);
         
         // Clean up any existing viewer
         if (viewer) {
           viewer.dispose();
+        }
+        
+        if (!window.molstar || !window.molstar.Viewer) {
+          throw new Error('Mol* Viewer not found');
         }
         
         // Create new Mol* viewer instance
@@ -99,16 +110,18 @@ const MoleculeViewer = ({
         setViewer(molstarViewer);
         
         // Load structure data
-        if (pdbId) {
+        if (pdbId && molstarViewer.loadPdb) {
           await molstarViewer.loadPdb(pdbId);
           console.log(`Loaded PDB ID: ${pdbId}`);
-        } else if (pdbUrl) {
+        } else if (pdbUrl && molstarViewer.loadStructureFromUrl) {
           await molstarViewer.loadStructureFromUrl(pdbUrl, 'pdb');
           console.log(`Loaded PDB from URL: ${pdbUrl}`);
-        } else {
+        } else if (molstarViewer.loadPdb) {
           // Load a default structure if no ID or URL provided
           await molstarViewer.loadPdb('1cbs');
           console.log('Loaded default structure (1cbs)');
+        } else {
+          console.warn('Structure loading methods not available');
         }
         
         // Apply initial rendering style
@@ -118,27 +131,32 @@ const MoleculeViewer = ({
         setError(null);
       } catch (err) {
         console.error('Error initializing Mol* viewer:', err);
-        setError('Failed to initialize structure viewer');
+        setError('Failed to initialize structure viewer: ' + err.message);
       } finally {
         setLoadingState(false);
       }
     };
     
-    if (window.molstar) {
-      initViewer();
-    }
+    initViewer();
     
     // Cleanup function
     return () => {
       if (viewer) {
-        viewer.dispose();
+        try {
+          viewer.dispose();
+        } catch (err) {
+          console.error('Error disposing viewer:', err);
+        }
       }
     };
-  }, [pdbId, pdbUrl, window.molstar]);
+  }, [pdbId, pdbUrl, molstarLoaded]);
   
-  // Helper functions for rendering styles and color schemes
+  // Helper functions for rendering styles and color schemes with error handling
   const applyRenderingStyle = async (moleculeViewer, style) => {
-    if (!moleculeViewer) return;
+    if (!moleculeViewer || !moleculeViewer.updateRepresentation) {
+      console.warn('Representation update method not available');
+      return;
+    }
     
     try {
       switch (style) {
@@ -165,7 +183,10 @@ const MoleculeViewer = ({
   };
   
   const applyColorScheme = async (moleculeViewer, scheme) => {
-    if (!moleculeViewer) return;
+    if (!moleculeViewer || !moleculeViewer.updateStyle) {
+      console.warn('Style update method not available');
+      return;
+    }
     
     try {
       switch (scheme) {
@@ -203,83 +224,96 @@ const MoleculeViewer = ({
     applyColorScheme(viewer, value);
   };
   
-  // Handle refresh
+  // Handle refresh with proper error handling
   const handleRefresh = () => {
-    if (viewer) {
-      viewer.dispose();
-      setViewer(null);
-      // Re-triggering the effect to reload the structure
-      if (window.molstar) {
-        const initViewer = async () => {
-          try {
-            setLoadingState(true);
-            
-            // Create new Mol* viewer instance
-            const molstarViewer = new window.molstar.Viewer(viewerContainerRef.current, {
-              layout: {
-                controlsDisplay: 'hidden',
-                regionState: {
-                  bottom: 'collapsed',
-                  left: 'collapsed',
-                  right: 'collapsed',
-                  top: 'collapsed'
-                }
-              },
-              viewport: {
-                showExpand: true,
-                showControls: true
-              },
-              plugin: {
-                customParamEditorTabs: []
-              }
-            });
-            
-            setViewer(molstarViewer);
-            
-            // Load structure data
-            if (pdbId) {
-              await molstarViewer.loadPdb(pdbId);
-            } else if (pdbUrl) {
-              await molstarViewer.loadStructureFromUrl(pdbUrl, 'pdb');
-            } else {
-              await molstarViewer.loadPdb('1cbs');
-            }
-            
-            await applyRenderingStyle(molstarViewer, renderStyle);
-            await applyColorScheme(molstarViewer, colorScheme);
-            
-            setError(null);
-          } catch (err) {
-            console.error('Error refreshing Mol* viewer:', err);
-            setError('Failed to refresh structure viewer');
-          } finally {
-            setLoadingState(false);
-          }
-        };
-        
-        initViewer();
-      }
+    if (!window.molstar || !viewerContainerRef.current) {
+      setError('Mol* viewer not available');
+      return;
     }
-  };
-  
-  // Download current view as image
-  const handleDownloadImage = () => {
+    
     if (viewer) {
       try {
-        const canvas = viewerContainerRef.current.querySelector('canvas');
-        if (canvas) {
-          const image = canvas.toDataURL('image/png');
-          const link = document.createElement('a');
-          link.href = image;
-          link.download = `${pdbId || 'structure'}_${renderStyle}_view.png`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        }
+        viewer.dispose();
       } catch (err) {
-        console.error('Error downloading image:', err);
-        setError('Failed to download image');
+        console.error('Error disposing viewer:', err);
       }
+      setViewer(null);
+    }
+    
+    // Re-initialize viewer
+    const reinitViewer = async () => {
+      try {
+        setLoadingState(true);
+        
+        // Create new viewer instance
+        const molstarViewer = new window.molstar.Viewer(viewerContainerRef.current, {
+          layout: {
+            controlsDisplay: 'hidden',
+            regionState: {
+              bottom: 'collapsed',
+              left: 'collapsed',
+              right: 'collapsed',
+              top: 'collapsed'
+            }
+          },
+          viewport: {
+            showExpand: true,
+            showControls: true
+          },
+          plugin: {
+            customParamEditorTabs: []
+          }
+        });
+        
+        setViewer(molstarViewer);
+        
+        // Load structure data
+        if (pdbId && molstarViewer.loadPdb) {
+          await molstarViewer.loadPdb(pdbId);
+        } else if (pdbUrl && molstarViewer.loadStructureFromUrl) {
+          await molstarViewer.loadStructureFromUrl(pdbUrl, 'pdb');
+        } else if (molstarViewer.loadPdb) {
+          await molstarViewer.loadPdb('1cbs');
+        }
+        
+        await applyRenderingStyle(molstarViewer, renderStyle);
+        await applyColorScheme(molstarViewer, colorScheme);
+        
+        setError(null);
+      } catch (err) {
+        console.error('Error refreshing Mol* viewer:', err);
+        setError('Failed to refresh structure viewer: ' + err.message);
+      } finally {
+        setLoadingState(false);
+      }
+    };
+    
+    reinitViewer();
+  };
+  
+  // Download current view as image with error handling
+  const handleDownloadImage = () => {
+    if (!viewer) {
+      setError('Viewer not initialized');
+      return;
+    }
+    
+    try {
+      const canvas = viewerContainerRef.current.querySelector('canvas');
+      if (canvas) {
+        const image = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = image;
+        link.download = `${pdbId || 'structure'}_${renderStyle}_view.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        throw new Error('Canvas element not found');
+      }
+    } catch (err) {
+      console.error('Error downloading image:', err);
+      setError('Failed to download image: ' + err.message);
     }
   };
   
