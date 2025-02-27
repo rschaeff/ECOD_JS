@@ -234,18 +234,16 @@ const getPlddtConfidenceLabel = (plddt: any): string => {
                             <div className="flex justify-between mb-1">
                               <span className="text-sm font-medium">Mean pLDDT</span>
                               <div className="flex items-center gap-2">
-                                <Badge className={
-                                  typeof structureData.mean_plddt === 'number' ? (
-                                  !structureData.mean_plddt ? 'bg-gray-300' :
-                                  structureData.mean_plddt >= 90 ? 'bg-green-500' :
-                                  structureData.mean_plddt >= 70 ? 'bg-blue-500' :
-                                  structureData.mean_plddt >= 50 ? 'bg-yellow-500' :
-                                  'bg-red-500'
-                                  ) : 'bg-gray-500'
-                                }>
-                                  {formatNumber(structureData.mean_plddt) }
-                                </Badge>
-                                <span className="text-xs text-gray-500">
+									<Badge className={
+									  typeof structureData.mean_plddt !== 'number' ? 'bg-gray-500' :
+									  structureData.mean_plddt >= 90 ? 'bg-green-500' :
+									  structureData.mean_plddt >= 70 ? 'bg-blue-500' :
+									  structureData.mean_plddt >= 50 ? 'bg-yellow-500' :
+									  'bg-red-500'
+									}>
+									  {formatNumber(structureData.mean_plddt)}
+									</Badge>                                
+									<span className="text-xs text-gray-500">
                                   {getPlddtConfidenceLabel(structureData.mean_plddt)}
                                 </span>
                               </div>
@@ -266,7 +264,7 @@ const getPlddtConfidenceLabel = (plddt: any): string => {
                                   structureData.resolution <= 4.0 ? 'bg-yellow-500' :
                                   'bg-red-500'
                                 }>
-                                  {structureData.resolution ? `${structureData.resolution.toFixed(2)}Å` : 'N/A'}
+                                  {formatNumber(structureData.resolution, 2)}Å
                                 </Badge>
                               </div>
                             </div>
@@ -274,15 +272,16 @@ const getPlddtConfidenceLabel = (plddt: any): string => {
                         )}
                         
                         {/* Common metrics for all structure types */}
-                        <MetricProgress
-                          label="Ramachandran Outliers"
-                          value={structureData.ramachandran_outliers}
-                          thresholds={{ good: 0.5, medium: 2.0 }}
-                          formatValue={(val) => `${val.toFixed(2)}%`}
-                          inverse={true}
-                          description="Percentage of residues with unusual backbone angles"
-                        />
-                        
+						{structureData.ramachandran_outliers !== undefined && structureData.ramachandran_outliers !== null && (
+						  <MetricProgress
+						    label="Ramachandran Outliers"
+						    value={structureData.ramachandran_outliers}
+						    thresholds={{ good: 0.5, medium: 2.0 }}
+						    formatValue={(val) => `${formatNumber(val, 2)}%`}
+						    inverse={true}
+						    description="Percentage of residues with unusual backbone angles"
+						  />
+                        )}
                         <MetricProgress
                           label="Sidechain Outliers"
                           value={structureData.sidechain_outliers}
@@ -346,7 +345,7 @@ const getPlddtConfidenceLabel = (plddt: any): string => {
                                   structureData.best_hit_tm_score >= 0.5 ? 'bg-blue-500' :
                                   'bg-yellow-500'
                                 }>
-                                  {structureData.best_hit_tm_score ? structureData.best_hit_tm_score.toFixed(2) : 'N/A'}
+                                  {formatNumber(structureData.best_hit_tm_score, 2)}
                                 </Badge>
                                 <span className="text-xs text-gray-500 ml-2">
                                   {structureData.best_hit_tm_score >= 0.8 ? '(Same fold)' :
@@ -364,7 +363,7 @@ const getPlddtConfidenceLabel = (plddt: any): string => {
                                   structureData.best_hit_rmsd <= 4.0 ? 'bg-blue-500' :
                                   'bg-yellow-500'
                                 }>
-                                  {structureData.best_hit_rmsd ? `${structureData.best_hit_rmsd.toFixed(2)}Å` : 'N/A'}
+                                  {structureData.best_hit_rmsd ? `${formatNumber(structureData.best_hit_rmsd, 2)}Å` : 'N/A'}
                                 </Badge>
                               </TableCell>
                             </TableRow>
