@@ -778,7 +778,7 @@ const apiService = {
     try {
       const queryParams = new URLSearchParams();
       if (params) {
- s       Object.entries(params).forEach(([key, value]) => {
+        Object.entries(params).forEach(([key, value]) => {
           if (value !== undefined) {
             queryParams.append(key, value.toString());
           }
