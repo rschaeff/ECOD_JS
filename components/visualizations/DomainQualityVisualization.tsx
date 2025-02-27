@@ -33,7 +33,10 @@ import { Badge } from '@/components/ui/badge';
 
 const DomainQualityDistribution = () => {
   const [selectedJudge, setSelectedJudge] = useState('all');
-  
+  const [domainData, setDomainData] = useState<DomainQualityData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   // Mock data for visualization using the correct DPAM judge categories
   const mockData = {
     // Domain confidence distribution
@@ -151,6 +154,25 @@ const DomainQualityDistribution = () => {
     }
   };
 
+  // Fetch data from API
+  useEffect(() => {
+    const fetchDomainQualityData = async () => {
+      try {
+        setLoading(true);
+        const data = await apiService.getDomainQualityData();
+        setDomainData(data);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching domain quality data:', err);
+        setError('Failed to load domain quality data. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDomainQualityData();
+  }, []);
+
   // Colors for different categories
   const COLORS = {
     // Confidence levels
@@ -236,7 +258,53 @@ const DomainQualityDistribution = () => {
     };
   };  
 
+  const formatPercentage = (value) => `${(value * 100).toFixed(1)}%`;
+  
+  // Determine which data to use (real or mock)
+  const displayData = domainData || mockData;
+
+
+
 // Render section of DomainQualityDistribution component
+  // Show loading state
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Domain Quality Distribution</CardTitle>
+          <CardDescription>Loading domain quality data...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-center items-center h-64">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Domain Quality Distribution</CardTitle>
+          <CardDescription>Error loading domain quality data</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center p-6 text-red-600">
+            <p>{error}</p>
+            <button 
+              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              onClick={() => window.location.reload()}
+            >
+              Try Again
+            </button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 return (
   <Card>
     <CardHeader>
@@ -277,26 +345,26 @@ return (
             <div className="col-span-1 space-y-4">
               <div className="bg-white p-4 rounded-lg border shadow-sm">
                 <h3 className="text-sm font-medium text-gray-500 mb-1">High Confidence Domains</h3>
-                <div className="text-3xl font-bold">{formatPercentage(mockData.metrics.highConfidenceFraction)}</div>
+                <div className="text-3xl font-bold">{formatPercentage(displayData.metrics.highConfidenceFraction)}</div>
                 <p className="text-xs text-gray-500 mt-1">Domains with confidence >70%</p>
               </div>
               
               <div className="bg-white p-4 rounded-lg border shadow-sm">
                 <h3 className="text-sm font-medium text-gray-500 mb-1">Average Domain pLDDT</h3>
-                <div className="text-3xl font-bold">{mockData.metrics.avgDomainPLDDT.toFixed(1)}</div>
+                <div className="text-3xl font-bold">{displayData.metrics.avgDomainPLDDT.toFixed(1)}</div>
                 <p className="text-xs text-gray-500 mt-1">Mean confidence across all domains</p>
               </div>
               
               <div className="bg-white p-4 rounded-lg border shadow-sm">
                 <h3 className="text-sm font-medium text-gray-500 mb-1">Total Domains</h3>
-                <div className="text-3xl font-bold">{mockData.metrics.totalDomains.toLocaleString()}</div>
+                <div className="text-3xl font-bold">{displayData.metrics.totalDomains.toLocaleString()}</div>
                 <p className="text-xs text-gray-500 mt-1">AlphaFold predicted domains</p>
               </div>
               
               <div className="bg-white p-4 rounded-lg border shadow-sm">
                 <h3 className="text-sm font-medium text-gray-500 mb-1">DPAM Judge Distribution</h3>
                 <div className="mt-2 space-y-2">
-                  {mockData.dpamJudgeDistribution.map((item, index) => (
+                  {displayData.dpamJudgeDistribution.map((item, index) => (
                     <div key={index} className="flex justify-between items-center">
                       <div className="flex items-center">
                         <div 
@@ -319,7 +387,7 @@ return (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={mockData.confidenceDistribution}
+                      data={displayData.confidenceDistribution}
                       cx="50%"
                       cy="50%"
                       innerRadius={60}
@@ -329,7 +397,7 @@ return (
                       dataKey="count"
                       label={({ category, percent }) => `${(percent * 100).toFixed(0)}%`}
                     >
-                      {mockData.confidenceDistribution.map((entry, index) => (
+                      {displayData.confidenceDistribution.map((entry, index) => (
                         <Cell 
                           key={`cell-${index}`} 
                           fill={COLORS[entry.category] || '#8884d8'} 
@@ -348,7 +416,7 @@ return (
               <h3 className="text-sm font-medium text-gray-500 mb-2">DPAM Probability Distribution</h3>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={mockData.dpamProbDistribution}>
+                  <BarChart data={displayData.dpamProbDistribution}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="range" />
                     <YAxis />
@@ -358,7 +426,7 @@ return (
                       fill="#8884d8" 
                       radius={[4, 4, 0, 0]}
                     >
-                      {mockData.dpamProbDistribution.map((entry, index) => {
+                      {displayData.dpamProbDistribution.map((entry, index) => {
                         // Gradient color based on probability
                         const value = index / 9; // 0 to 1
                         const r = Math.round(255 * (1 - value));
@@ -423,7 +491,7 @@ return (
                       }}
                     />
                     {['good_domain', 'simple_topology', 'partial_domain', 'low_confidence'].map((judge) => {
-                      const filteredData = filterByJudge(mockData.correlationData).filter(d => d.judge === judge);
+                      const filteredData = filterByJudge(displayData.correlationData).filter(d => d.judge === judge);
                       return filteredData.length > 0 ? (
                         <Scatter
                           key={judge}
@@ -438,13 +506,13 @@ return (
               </div>
               <div className="text-center text-sm mt-2">
                 <span className="font-medium">Correlation: </span>
-                <span>{mockData.metrics.correlationCoefficient.toFixed(2)}</span>
+                <span>{displayData.metrics.correlationCoefficient.toFixed(2)}</span>
                 <span className="mx-3">|</span>
                 <span className="font-medium">Mean Protein pLDDT: </span>
-                <span>{mockData.metrics.avgProteinPLDDT.toFixed(1)}</span>
+                <span>{displayData.metrics.avgProteinPLDDT.toFixed(1)}</span>
                 <span className="mx-3">|</span>
                 <span className="font-medium">Mean Domain Confidence: </span>
-                <span>{mockData.metrics.avgDomainPLDDT.toFixed(1)}</span>
+                <span>{displayData.metrics.avgDomainPLDDT.toFixed(1)}</span>
               </div>
             </div>
             
@@ -454,7 +522,7 @@ return (
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={mockData.confidenceByJudge}
+                    data={displayData.confidenceByJudge}
                     layout="vertical"
                     margin={{ top: 20, right: 20, bottom: 20, left: 100 }}
                   >
@@ -487,7 +555,7 @@ return (
                       }}
                     />
                     <Bar dataKey="median" fill="transparent">
-                      {mockData.confidenceByJudge.map((entry, index) => {
+                      {displayData.confidenceByJudge.map((entry, index) => {
                         const color = getJudgeColor(entry.judge);
                         return (
                           <Cell key={`cell-box-${index}`}>
@@ -553,7 +621,7 @@ return (
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={mockData.secondaryStructure}
+                    data={displayData.secondaryStructure}
                     margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
@@ -589,7 +657,7 @@ return (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={mockData.dpamJudgeDistribution}
+                      data={displayData.dpamJudgeDistribution}
                       cx="50%"
                       cy="50%"
                       outerRadius={80}
@@ -598,7 +666,7 @@ return (
                       nameKey="judge"
                       label={({ judge, percent }) => `${(percent * 100).toFixed(0)}%`}
                     >
-                      {mockData.dpamJudgeDistribution.map((entry, index) => (
+                      {displayData.dpamJudgeDistribution.map((entry, index) => (
                         <Cell 
                           key={`cell-${index}`} 
                           fill={getJudgeColor(entry.judge)} 
@@ -622,7 +690,7 @@ return (
               <h3 className="text-sm font-medium text-gray-500 mb-2">DPAM Judge by DPAM Probability Range</h3>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={mockData.dpamConfidenceByJudge}>
+                  <BarChart data={displayData.dpamConfidenceByJudge}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="probRange" />
                     <YAxis />
@@ -685,7 +753,7 @@ return (
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {mockData.dpamJudgeDistribution.map((item, index) => (
+                    {displayData.dpamJudgeDistribution.map((item, index) => (
                       <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
@@ -769,7 +837,7 @@ return (
     </CardContent>
     <CardFooter>
       <div className="w-full text-center text-xs text-gray-500">
-        Total Domains: <strong>{mockData.metrics.totalDomains.toLocaleString()}</strong> • 
+        Total Domains: <strong>{displayData.metrics.totalDomains.toLocaleString()}</strong> • 
         Data current as of: <strong>{new Date().toLocaleDateString()}</strong>
       </div>
     </CardFooter>

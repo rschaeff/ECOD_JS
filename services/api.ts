@@ -369,6 +369,65 @@ export interface PriorityClustersResponse {
   };
 }
 
+// Define interface for domain quality data
+export interface DomainQualityData {
+  metrics: {
+    totalDomains: number;
+    avgDomainPLDDT: number;
+    avgProteinPLDDT: number;
+    highConfidenceFraction: number;
+    correlationCoefficient: number;
+    structuresWithDomains: number;
+    totalStructures: number;
+  };
+  dpamJudgeDistribution: {
+    judge: string;
+    count: number;
+    percentage: number;
+  }[];
+  confidenceDistribution: {
+    category: string;
+    count: number;
+    percentage: number;
+  }[];
+  dpamProbDistribution: {
+    range: string;
+    count: number;
+  }[];
+  dpamConfidenceByJudge: {
+    probRange: string;
+    good_domain: number;
+    simple_topology: number;
+    partial_domain: number;
+    low_confidence: number;
+  }[];
+  secondaryStructure: {
+    judge: string;
+    helices: number;
+    strands: number;
+  }[];
+  confidenceByJudge: {
+    judge: string;
+    min: number;
+    q1: number;
+    median: number;
+    q3: number;
+    max: number;
+  }[];
+  correlationData: {
+    domainConfidence: number;
+    proteinPLDDT: number;
+    judge: string;
+  }[];
+  qualityOverTime: {
+    month: string;
+    averagePLDDT: number;
+    countPredicted: number;
+    countExperimental: number;
+  }[];
+}
+
+
 // API service functions
 const apiService = {
   // Dashboard data - split for better performance
@@ -901,6 +960,17 @@ async getStructureQualityAssessment(structureId: number): Promise<{
     return response.json();
   } catch (error) {
     console.error(`Error fetching quality assessment for structure ${structureId}:`, error);
+    throw error;
+  }
+},
+
+// Add to apiService object
+async getDomainQualityData(): Promise<DomainQualityData> {
+  try {
+    const response = await axios.get(`${API_URL}/statistics/domain-quality`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching domain quality data:', error);
     throw error;
   }
 }
