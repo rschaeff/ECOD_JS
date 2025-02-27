@@ -16,7 +16,8 @@ export default async function handler(
   }
 
   try {
-    // Get taxonomy stats (fixed query)
+    // Get taxonomy stats (fixed query) this query doesn't report anything useful
+    // A better query would return the fraction of monophyletic versus multiphyletic versus singleton clusters
     const taxonomyStatsResult = await pool.query(`
       SELECT 
         superkingdom as kingdom,
@@ -38,6 +39,7 @@ export default async function handler(
     `);
     
     // Get T-group distribution
+    // This query is just as useless as the one above
     const tgroupResult = await pool.query(`
       SELECT 
         COALESCE(tn.name, d.t_group) as tgroup,
