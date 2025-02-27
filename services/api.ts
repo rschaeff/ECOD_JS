@@ -967,7 +967,7 @@ async getStructureQualityAssessment(structureId: number): Promise<{
 // Add to apiService object
 async getDomainQualityData(): Promise<DomainQualityData> {
   try {
-    const response = await axios.get(`${API_URL}/statistics/domain-quality`);
+    const response = await axios.get(`${BASE_API_URL}/statistics/domain-quality`);
     return response.data;
   } catch (error) {
     console.error('Error fetching domain quality data:', error);
