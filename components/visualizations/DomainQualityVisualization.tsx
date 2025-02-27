@@ -293,7 +293,7 @@ const DomainQualityDistribution = () => {
         </CardContent>
       </Card>
     );
-  }
+  };
 
   // Show error state
   if (error) {
@@ -316,7 +316,7 @@ const DomainQualityDistribution = () => {
         </CardContent>
       </Card>
     );
-  }
+  };
   return (
     <Card>
       <CardHeader>
