@@ -38,7 +38,7 @@ export default async function handler(
       ORDER BY count DESC
     `);
 
-    // Get confidence distribution
+    // Get confidence distribution - FIXED by repeating the CASE expression in GROUP BY
     const confidenceDistQuery = await pool.query(`
       SELECT 
         CASE
@@ -50,52 +50,88 @@ export default async function handler(
         COUNT(*) as count,
         COUNT(*)::float / (SELECT COUNT(*) FROM swissprot.domain) as percentage
       FROM swissprot.domain
-      GROUP BY category
+      GROUP BY 
+        CASE
+          WHEN dpam_prob > 0.9 THEN 'Very High (>90)'
+          WHEN dpam_prob > 0.7 THEN 'High (70-90)'
+          WHEN dpam_prob > 0.5 THEN 'Medium (50-70)'
+          ELSE 'Low (<50)'
+        END
       ORDER BY 
         CASE 
-          WHEN category = 'Very High (>90)' THEN 1
-          WHEN category = 'High (70-90)' THEN 2
-          WHEN category = 'Medium (50-70)' THEN 3
-          WHEN category = 'Low (<50)' THEN 4
+          WHEN 
+            CASE
+              WHEN dpam_prob > 0.9 THEN 'Very High (>90)'
+              WHEN dpam_prob > 0.7 THEN 'High (70-90)'
+              WHEN dpam_prob > 0.5 THEN 'Medium (50-70)'
+              ELSE 'Low (<50)'
+            END = 'Very High (>90)' THEN 1
+          WHEN 
+            CASE
+              WHEN dpam_prob > 0.9 THEN 'Very High (>90)'
+              WHEN dpam_prob > 0.7 THEN 'High (70-90)'
+              WHEN dpam_prob > 0.5 THEN 'Medium (50-70)'
+              ELSE 'Low (<50)'
+            END = 'High (70-90)' THEN 2
+          WHEN 
+            CASE
+              WHEN dpam_prob > 0.9 THEN 'Very High (>90)'
+              WHEN dpam_prob > 0.7 THEN 'High (70-90)'
+              WHEN dpam_prob > 0.5 THEN 'Medium (50-70)'
+              ELSE 'Low (<50)'
+            END = 'Medium (50-70)' THEN 3
+          ELSE 4
         END
     `);
 
-    // Get DPAM prob distribution
+    // Alternatively, we could use a subquery or CTE for cleaner code
+    // Get DPAM prob distribution - FIXED using a CTE
     const dpamProbDistQuery = await pool.query(`
+      WITH ranges AS (
+        SELECT
+          CASE
+            WHEN dpam_prob >= 0.0 AND dpam_prob < 0.1 THEN '0.0-0.1'
+            WHEN dpam_prob >= 0.1 AND dpam_prob < 0.2 THEN '0.1-0.2'
+            WHEN dpam_prob >= 0.2 AND dpam_prob < 0.3 THEN '0.2-0.3'
+            WHEN dpam_prob >= 0.3 AND dpam_prob < 0.4 THEN '0.3-0.4'
+            WHEN dpam_prob >= 0.4 AND dpam_prob < 0.5 THEN '0.4-0.5'
+            WHEN dpam_prob >= 0.5 AND dpam_prob < 0.6 THEN '0.5-0.6'
+            WHEN dpam_prob >= 0.6 AND dpam_prob < 0.7 THEN '0.6-0.7'
+            WHEN dpam_prob >= 0.7 AND dpam_prob < 0.8 THEN '0.7-0.8'
+            WHEN dpam_prob >= 0.8 AND dpam_prob < 0.9 THEN '0.8-0.9'
+            WHEN dpam_prob >= 0.9 AND dpam_prob <= 1.0 THEN '0.9-1.0'
+          END as range
+        FROM swissprot.domain
+      )
       SELECT 
-        CASE
-          WHEN dpam_prob >= 0.0 AND dpam_prob < 0.1 THEN '0.0-0.1'
-          WHEN dpam_prob >= 0.1 AND dpam_prob < 0.2 THEN '0.1-0.2'
-          WHEN dpam_prob >= 0.2 AND dpam_prob < 0.3 THEN '0.2-0.3'
-          WHEN dpam_prob >= 0.3 AND dpam_prob < 0.4 THEN '0.3-0.4'
-          WHEN dpam_prob >= 0.4 AND dpam_prob < 0.5 THEN '0.4-0.5'
-          WHEN dpam_prob >= 0.5 AND dpam_prob < 0.6 THEN '0.5-0.6'
-          WHEN dpam_prob >= 0.6 AND dpam_prob < 0.7 THEN '0.6-0.7'
-          WHEN dpam_prob >= 0.7 AND dpam_prob < 0.8 THEN '0.7-0.8'
-          WHEN dpam_prob >= 0.8 AND dpam_prob < 0.9 THEN '0.8-0.9'
-          WHEN dpam_prob >= 0.9 AND dpam_prob <= 1.0 THEN '0.9-1.0'
-        END as range,
+        range,
         COUNT(*) as count
-      FROM swissprot.domain
+      FROM ranges
       GROUP BY range
       ORDER BY range
     `);
 
-    // Get DPAM confidence by judge
+    // Get DPAM confidence by judge - FIXED using a CTE
     const dpamByJudgeQuery = await pool.query(`
+      WITH range_data AS (
+        SELECT
+          CASE
+            WHEN dpam_prob >= 0.0 AND dpam_prob < 0.2 THEN '0.0-0.2'
+            WHEN dpam_prob >= 0.2 AND dpam_prob < 0.4 THEN '0.2-0.4'
+            WHEN dpam_prob >= 0.4 AND dpam_prob < 0.6 THEN '0.4-0.6'
+            WHEN dpam_prob >= 0.6 AND dpam_prob < 0.8 THEN '0.6-0.8'
+            WHEN dpam_prob >= 0.8 AND dpam_prob <= 1.0 THEN '0.8-1.0'
+          END as probRange,
+          judge
+        FROM swissprot.domain
+      )
       SELECT
-        CASE
-          WHEN dpam_prob >= 0.0 AND dpam_prob < 0.2 THEN '0.0-0.2'
-          WHEN dpam_prob >= 0.2 AND dpam_prob < 0.4 THEN '0.2-0.4'
-          WHEN dpam_prob >= 0.4 AND dpam_prob < 0.6 THEN '0.4-0.6'
-          WHEN dpam_prob >= 0.6 AND dpam_prob < 0.8 THEN '0.6-0.8'
-          WHEN dpam_prob >= 0.8 AND dpam_prob <= 1.0 THEN '0.8-1.0'
-        END as probRange,
+        probRange,
         COUNT(CASE WHEN judge = 'good_domain' THEN 1 END) as good_domain,
         COUNT(CASE WHEN judge = 'simple_topology' THEN 1 END) as simple_topology,
         COUNT(CASE WHEN judge = 'partial_domain' THEN 1 END) as partial_domain,
         COUNT(CASE WHEN judge = 'low_confidence' THEN 1 END) as low_confidence
-      FROM swissprot.domain
+      FROM range_data
       GROUP BY probRange
       ORDER BY probRange
     `);
