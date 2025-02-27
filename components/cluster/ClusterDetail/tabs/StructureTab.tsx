@@ -78,15 +78,25 @@ const StructureTab: React.FC<StructureTabProps> = ({
   };
   
   const sourceInfo = getStructureSourceInfo();
-  
-  // Format confidence level for pLDDT
-  const getPlddtConfidenceLabel = (plddt: number | null | undefined) => {
-    if (plddt === null || plddt === undefined) return '';
-    if (plddt >= 90) return '(Very high confidence)';
-    if (plddt >= 70) return '(High confidence)';
-    if (plddt >= 50) return '(Medium confidence)';
-    return '(Low confidence)';
+
+  const formatNumber = (value: any, decimals = 1): string => {
+	  if (value === null || value === undefined || typeof value !== 'number' || isNaN(value)) {
+	    return 'N/A';
+	  }
+	  return value.toFixed(decimals);
   };
+  
+  // Helper function to get pLDDT confidence label
+const getPlddtConfidenceLabel = (plddt: any): string => {
+  if (plddt === null || plddt === undefined || typeof plddt !== 'number' || isNaN(plddt)) {
+    return 'Unknown';
+  }
+  
+  if (plddt >= 90) return 'Very high (confident)';
+  if (plddt >= 70) return 'High';
+  if (plddt >= 50) return 'Medium';
+  return 'Low (less reliable)';
+};
   
   // Structure download handler
   const handleDownloadStructure = () => {
@@ -225,13 +235,15 @@ const StructureTab: React.FC<StructureTabProps> = ({
                               <span className="text-sm font-medium">Mean pLDDT</span>
                               <div className="flex items-center gap-2">
                                 <Badge className={
+                                  typeof structureData.mean_plddt === 'number' ? (
                                   !structureData.mean_plddt ? 'bg-gray-300' :
                                   structureData.mean_plddt >= 90 ? 'bg-green-500' :
                                   structureData.mean_plddt >= 70 ? 'bg-blue-500' :
                                   structureData.mean_plddt >= 50 ? 'bg-yellow-500' :
                                   'bg-red-500'
+                                  ) : 'bg-gray-500'
                                 }>
-                                  {structureData.mean_plddt ? structureData.mean_plddt.toFixed(1) : 'N/A'}
+                                  {formatNumber(structureData.mean_plddt) }
                                 </Badge>
                                 <span className="text-xs text-gray-500">
                                   {getPlddtConfidenceLabel(structureData.mean_plddt)}
@@ -482,4 +494,4 @@ const StructureTab: React.FC<StructureTabProps> = ({
   );
 };
 
-export default StructureTab;
+export default StructureTab;	
