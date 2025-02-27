@@ -272,7 +272,8 @@ const getPlddtConfidenceLabel = (plddt: any): string => {
                         )}
                         
                         {/* Common metrics for all structure types */}
-						{structureData.ramachandran_outliers !== undefined && structureData.ramachandran_outliers !== null && (
+						{structureData.ramachandran_outliers !== undefined && 
+						structureData.ramachandran_outliers !== null && (
 						  <MetricProgress
 						    label="Ramachandran Outliers"
 						    value={structureData.ramachandran_outliers}
@@ -282,23 +283,30 @@ const getPlddtConfidenceLabel = (plddt: any): string => {
 						    description="Percentage of residues with unusual backbone angles"
 						  />
                         )}
+
+                        {structureData.sidechain_outliers !== undefined && 
+                        structureData.sidechain_outliers !== null && ( 
                         <MetricProgress
                           label="Sidechain Outliers"
                           value={structureData.sidechain_outliers}
                           thresholds={{ good: 1.0, medium: 4.0 }}
-                          formatValue={(val) => `${val.toFixed(2)}%`}
+                          formatValue={(val) => `${formatNumber(val, 2)}%`}
                           inverse={true}
                           description="Percentage of residues with unusual sidechain conformations"
                         />
+                        )}
                         
+                        {structureData.clash_score !== undefined && 
+                    	structureData.clash_score !== null && ( 
                         <MetricProgress
                           label="Clash Score"
                           value={structureData.clash_score}
                           thresholds={{ good: 6.0, medium: 15.0 }}
-                          formatValue={(val) => val.toFixed(2)}
+                          formatValue={(val) => formatNumber(val, 2)}
                           inverse={true}
                           description="Number of serious atom-atom overlaps per 1000 atoms"
                         />
+                        )}
                         
                         <div className="flex justify-between mt-3">
                           <span className="text-sm font-medium">Date Created</span>
@@ -371,7 +379,7 @@ const getPlddtConfidenceLabel = (plddt: any): string => {
                               <TableCell className="font-medium">Sequence Identity</TableCell>
                               <TableCell>
                                 {structureData.best_hit_seq_identity ? 
-                                  `${(structureData.best_hit_seq_identity * 100).toFixed(1)}%` : 
+                                  `${formatNumber(structureData.best_hit_seq_identity * 100, 1)}%` : 
                                   'N/A'
                                 }
                               </TableCell>
