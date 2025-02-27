@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Card, 
   CardHeader, 
@@ -30,6 +30,8 @@ import {
 } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+
+import apiService, { DomainQualityData } from '@/services/api';
 
 const DomainQualityDistribution = () => {
   const [selectedJudge, setSelectedJudge] = useState('all');
