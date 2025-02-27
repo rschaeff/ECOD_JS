@@ -7,6 +7,7 @@ import {
   CardDescription, 
   CardFooter 
 } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   ResponsiveContainer, 
@@ -38,6 +39,7 @@ const DomainQualityDistribution = () => {
   const [domainData, setDomainData] = useState<DomainQualityData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [useMockData, setUseMockData] = useState(false);
 
   // Mock data for visualization using the correct DPAM judge categories
   const mockData = {
@@ -159,6 +161,12 @@ const DomainQualityDistribution = () => {
   // Fetch data from API
   useEffect(() => {
     const fetchDomainQualityData = async () => {
+      if (useMockData) {
+        setDomainData(null);
+        setLoading(false);
+        setError(null);
+        return;
+      }
       try {
         setLoading(true);
         const data = await apiService.getDomainQualityData();
@@ -173,7 +181,7 @@ const DomainQualityDistribution = () => {
     };
 
     fetchDomainQualityData();
-  }, []);
+  }, [useMockData]);
 
   // Colors for different categories
   const COLORS = {
@@ -260,9 +268,13 @@ const DomainQualityDistribution = () => {
     };
   };  
 
-  // Determine which data to use (real or mock)
-  const displayData = domainData || mockData;
+  // Determine which data to use based on toggle
+  const displayData = useMockData ? mockData : (domainData || mockData);
 
+  // Handler for toggle switch
+  const handleToggleDataSource = () => {
+    setUseMockData(!useMockData);
+  };
 
 
 // Render section of DomainQualityDistribution component
@@ -305,33 +317,129 @@ const DomainQualityDistribution = () => {
       </Card>
     );
   }
-return (
-  <Card>
-    <CardHeader>
-      <div className="flex justify-between items-center">
-        <div>
-          <CardTitle>Domain Quality Distribution</CardTitle>
-          <CardDescription>Analysis of AlphaFold domain quality metrics</CardDescription>
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle>Domain Quality Distribution</CardTitle>
+            <CardDescription>Analysis of AlphaFold domain quality metrics</CardDescription>
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <span className={`text-sm ${useMockData ? 'font-medium' : 'text-gray-500'}`}>
+                Mock
+              </span>
+              <Switch 
+                checked={!useMockData} 
+                onCheckedChange={handleToggleDataSource}
+                aria-label="Toggle data source"
+              />
+              <span className={`text-sm ${!useMockData ? 'font-medium' : 'text-gray-500'}`}>
+                Real
+              </span>
+            </div>
+            <Select 
+              value={selectedJudge} 
+              onValueChange={setSelectedJudge}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by DPAM judge" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="good_domain">Good Domain</SelectItem>
+                <SelectItem value="simple_topology">Simple Topology</SelectItem>
+                <SelectItem value="partial_domain">Partial Domain</SelectItem>
+                <SelectItem value="low_confidence">Low Confidence</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        <Select 
-          value={selectedJudge} 
-          onValueChange={setSelectedJudge}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by DPAM judge" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            <SelectItem value="good_domain">Good Domain</SelectItem>
-            <SelectItem value="simple_topology">Simple Topology</SelectItem>
-            <SelectItem value="partial_domain">Partial Domain</SelectItem>
-            <SelectItem value="low_confidence">Low Confidence</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </CardHeader>
-    <CardContent>
-      <Tabs defaultValue="confidence">
+        {/* Data source indicator */}
+        <div className="mt-1">
+          <Badge variant={useMockData ? "secondary" : "default"} className="text-xs">
+            {useMockData 
+              ? "Using mock data for demonstration" 
+              : loading 
+                ? "Loading real data..." 
+                : error 
+                  ? "Error loading real data - using fallback" 
+                  : "Using real data from API"
+            }
+          </Badge>
+        </div>
+      </CardHeader>
+      
+      <CardContent>
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <span className="ml-2">Loading domain quality data...</span>
+          </div>
+        ) : (
+          <Tabs defaultValue="confidence">  return (
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle>Domain Quality Distribution</CardTitle>
+            <CardDescription>Analysis of AlphaFold domain quality metrics</CardDescription>
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <span className={`text-sm ${useMockData ? 'font-medium' : 'text-gray-500'}`}>
+                Mock
+              </span>
+              <Switch 
+                checked={!useMockData} 
+                onCheckedChange={handleToggleDataSource}
+                aria-label="Toggle data source"
+              />
+              <span className={`text-sm ${!useMockData ? 'font-medium' : 'text-gray-500'}`}>
+                Real
+              </span>
+            </div>
+            <Select 
+              value={selectedJudge} 
+              onValueChange={setSelectedJudge}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by DPAM judge" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="good_domain">Good Domain</SelectItem>
+                <SelectItem value="simple_topology">Simple Topology</SelectItem>
+                <SelectItem value="partial_domain">Partial Domain</SelectItem>
+                <SelectItem value="low_confidence">Low Confidence</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        {/* Data source indicator */}
+        <div className="mt-1">
+          <Badge variant={useMockData ? "secondary" : "default"} className="text-xs">
+            {useMockData 
+              ? "Using mock data for demonstration" 
+              : loading 
+                ? "Loading real data..." 
+                : error 
+                  ? "Error loading real data - using fallback" 
+                  : "Using real data from API"
+            }
+          </Badge>
+        </div>
+      </CardHeader>
+      
+      <CardContent>
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <span className="ml-2">Loading domain quality data...</span>
+          </div>
+        ) : (
+          <Tabs defaultValue="confidence">
         <TabsList className="w-full grid grid-cols-3">
           <TabsTrigger value="confidence">Confidence Distribution</TabsTrigger>
           <TabsTrigger value="correlation">Domain vs Protein</TabsTrigger>
@@ -834,13 +942,15 @@ return (
         </TabsContent>
         
       </Tabs>
+      )}
     </CardContent>
-    <CardFooter>
-      <div className="w-full text-center text-xs text-gray-500">
-        Total Domains: <strong>{displayData.metrics.totalDomains.toLocaleString()}</strong> • 
-        Data current as of: <strong>{new Date().toLocaleDateString()}</strong>
-      </div>
-    </CardFooter>
+      <CardFooter>
+        <div className="w-full text-center text-xs text-gray-500">
+          Total Domains: <strong>{displayData.metrics.totalDomains.toLocaleString()}</strong> • 
+          Data current as of: <strong>{new Date().toLocaleDateString()}</strong> •
+          Data source: <strong>{useMockData ? "Mock" : "Real"}</strong>
+        </div>
+      </CardFooter>
   </Card>
 );
 };
