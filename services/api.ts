@@ -428,6 +428,40 @@ export interface DomainQualityData {
 }
 
 
+// Add this interface to services/api.ts
+export interface ProteinDomains {
+  protein: {
+    unp_acc: string;
+    source_id: string;
+    sequence_length: number;
+    species?: string;
+    tax_id?: number;
+  } | null;
+  structure: {
+    id: number;
+    source: 'alphafold' | 'experimental' | 'custom';
+    file_type: string;
+    resolution?: number;
+    confidence_score?: number;
+  } | null;
+  domains: Array<Domain & {
+    species?: string;
+    phylum?: string;
+    tax_id?: number;
+    superkingdom?: string;
+    has_structure: boolean;
+    primary_cluster_id?: number;
+    dpam_prob?: number;
+    hh_prob?: number;
+    judge?: string;
+    hcount?: number;
+    scount?: number;
+  }>;
+  count: number;
+}
+
+
+
 // API service functions
 const apiService = {
   // Dashboard data - split for better performance
@@ -443,6 +477,19 @@ const apiService = {
       throw error;
     }
   },
+
+    async getProteinDomains(proteinId: string): Promise<ProteinDomains> {
+      try {
+        const response = await fetch(`${BASE_API_URL}/proteins/${proteinId}/domains`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch domains for protein ${proteinId}`);
+        }
+        return response.json();
+      } catch (error) {
+        console.error(`Error fetching domains for protein ${proteinId}:`, error);
+        throw error;
+      }
+},
 
   async getDashboardClusterSets() {
     try {
